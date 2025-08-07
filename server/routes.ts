@@ -5,6 +5,7 @@ import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema, 
 import { telegramBot } from "./services/telegram-bot";
 import { MarketingScheduler } from "./services/marketing-scheduler";
 import { AuthService, requireAuth } from "./auth";
+import { blogScheduler } from "./services/blog-scheduler";
 
 // Global marketing scheduler instance
 let marketingScheduler: MarketingScheduler | null = null;
@@ -601,6 +602,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to increment view count" });
     }
   });
+
+  // Blog Generator API Endpoints
+  app.post("/api/blog-generator/generate", requireAuth, async (req, res) => {
+    try {
+      const { blogGenerator } = await import("./services/blog-generator");
+      await blogGenerator.generateBlogContent();
+      res.json({ 
+        success: true, 
+        message: "Blog content generation started successfully" 
+      });
+    } catch (error) {
+      console.error("Blog generation error:", error);
+      res.status(500).json({ 
+        error: "Failed to generate blog content",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.get("/api/blog-generator/status", requireAuth, async (req, res) => {
+    try {
+      const status = blogScheduler.getStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get blog generator status" });
+    }
+  });
+
+  // Start blog scheduler
+  blogScheduler.start();
 
   const httpServer = createServer(app);
   return httpServer;

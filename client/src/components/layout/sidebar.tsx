@@ -7,6 +7,7 @@ const navigationItems = [
   { name: "Mahsulotlar", path: "/products", icon: "fas fa-box" },
   { name: "Buyurtmalar", path: "/orders", icon: "fas fa-shopping-cart" },
   { name: "Blog", path: "/admin/blogs", icon: "fas fa-blog" },
+  { name: "Blog Generator", path: "/blog-generator", icon: "fas fa-rss" },
   { name: "Foydalanuvchilar", path: "/users", icon: "fas fa-users" },
   { name: "Suhbatlar", path: "/conversations", icon: "fas fa-comments" },
   { name: "Bot Sozlamalari", path: "/bot-settings", icon: "fas fa-cogs" },

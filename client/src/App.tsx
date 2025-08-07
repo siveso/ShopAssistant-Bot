@@ -27,6 +27,7 @@ import Home from "@/pages/home";
 import BlogPage from "@/pages/blog";
 import BlogDetailPage from "@/pages/blog-detail";
 import BlogsPage from "@/pages/blogs";
+import BlogGenerator from "@/pages/blog-generator";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 
@@ -69,6 +70,7 @@ function Router() {
           <Route path="/help" component={Help} />
           <Route path="/marketing" component={Marketing} />
           <Route path="/admin/blogs" component={BlogsPage} />
+          <Route path="/blog-generator" component={BlogGenerator} />
           <Route path="/logout" component={Logout} />
         </>
       ) : (
