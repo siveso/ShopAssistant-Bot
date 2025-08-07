@@ -48,6 +48,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/home" component={Home} />
       <Route path="/login" component={Login} />
+      <Route path="/" component={Home} />
       {isAuthenticated ? (
         <>
           <Route path="/admin" component={Dashboard} />
@@ -64,10 +65,7 @@ function Router() {
           <Route path="/logout" component={Logout} />
         </>
       ) : (
-        <>
-          <Route path="/admin" component={Login} />
-          <Route path="/" component={Home} />
-        </>
+        <Route path="/admin" component={Login} />
       )}
       <Route component={NotFound} />
     </Switch>
