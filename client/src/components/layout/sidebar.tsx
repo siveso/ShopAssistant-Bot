@@ -10,6 +10,7 @@ const navigationItems = [
   { name: "Suhbatlar", path: "/conversations", icon: "fas fa-comments" },
   { name: "Bot Sozlamalari", path: "/bot-settings", icon: "fas fa-cogs" },
   { name: "Tarjimalar", path: "/translations", icon: "fas fa-language" },
+  { name: "Marketing", path: "/marketing", icon: "fas fa-bullhorn" },
   { name: "Hisobotlar", path: "/analytics", icon: "fas fa-chart-bar" },
 ];
 

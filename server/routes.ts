@@ -3,6 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertOrderSchema, insertUserSchema } from "@shared/schema";
 import { telegramBot } from "./services/telegram-bot";
+import { MarketingScheduler } from "./services/marketing-scheduler";
+
+// Global marketing scheduler instance
+let marketingScheduler: MarketingScheduler | null = null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard Stats
@@ -190,6 +194,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to search products" });
     }
   });
+
+  // Marketing endpoints
+  app.get("/api/marketing/messages", async (req, res) => {
+    try {
+      // Return default marketing messages for now
+      const messages = [
+        {
+          id: 'default-1',
+          titleUz: '🎉 Yangi Chegirmalar!',
+          titleRu: '🎉 Новые Скидки!',
+          contentUz: `🛍️ Hurmatli mijoz!\n\n🎊 Bizda yangi chegirmalar boshlandi!\n💫 20% gacha chegirma barcha mahsulotlarga\n⏰ Muddat: 3 kun\n\n📦 Katalogni ko'rish uchun tugmani bosing!`,
+          contentRu: `🛍️ Уважаемый клиент!\n\n🎊 У нас началась новая акция!\n💫 Скидки до 20% на все товары\n⏰ Срок: 3 дня\n\n📦 Нажмите кнопку для просмотра каталога!`,
+          isActive: true,
+          intervalDays: 2,
+          createdAt: new Date().toISOString(),
+          lastSentAt: undefined
+        },
+        {
+          id: 'default-2',
+          titleUz: '🚚 Bepul Yetkazib Berish!',
+          titleRu: '🚚 Бесплатная Доставка!',
+          contentUz: `🎁 Ajoyib yangilik!\n\n🚚 100,000 so'mdan yuqori buyurtmalarga bepul yetkazib berish!\n📍 Butun O'zbekiston bo'ylab\n⚡ Tez va ishonchli\n\n🛒 Hoziroq buyurtma bering!`,
+          contentRu: `🎁 Отличные новости!\n\n🚚 Бесплатная доставка при заказе от 100,000 сум!\n📍 По всему Узбекистану\n⚡ Быстро и надежно\n\n🛒 Заказывайте прямо сейчас!`,
+          isActive: false,
+          intervalDays: 2,
+          createdAt: new Date().toISOString(),
+          lastSentAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() // 1 day ago
+        }
+      ];
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch marketing messages" });
+    }
+  });
+
+  app.post("/api/marketing/messages", async (req, res) => {
+    try {
+      // For now, just return a success response
+      // In a real implementation, you'd save to database
+      const newMessage = {
+        id: Date.now().toString(),
+        ...req.body,
+        createdAt: new Date().toISOString(),
+      };
+      res.status(201).json(newMessage);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create marketing message" });
+    }
+  });
+
+  app.put("/api/marketing/messages/:id", async (req, res) => {
+    try {
+      // For now, just return success
+      const updatedMessage = {
+        id: req.params.id,
+        ...req.body,
+        updatedAt: new Date().toISOString(),
+      };
+      res.json(updatedMessage);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update marketing message" });
+    }
+  });
+
+  app.post("/api/marketing/send-now/:id", async (req, res) => {
+    try {
+      if (!marketingScheduler) {
+        return res.status(400).json({ error: "Marketing scheduler not initialized" });
+      }
+      
+      const result = await marketingScheduler.sendMarketingMessageNow(req.params.id);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "Failed to send marketing message" });
+    }
+  });
+
+  // Initialize marketing scheduler when bot is ready
+  if (telegramBot) {
+    marketingScheduler = new MarketingScheduler(telegramBot);
+    marketingScheduler.startScheduler();
+    console.log("Marketing scheduler initialized and started");
+  }
 
   const httpServer = createServer(app);
   return httpServer;

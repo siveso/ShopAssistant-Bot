@@ -7,6 +7,17 @@ class TelegramBotService {
   private bot: TelegramBot | null = null;
   private isActive = false;
 
+  // Public methods for marketing scheduler
+  public async sendMessage(chatId: string | number, text: string, options?: any) {
+    if (!this.bot) return;
+    return await this.bot.sendMessage(chatId, text, options);
+  }
+
+  public async sendPhoto(chatId: string | number, photo: string, options?: any) {
+    if (!this.bot) return;
+    return await this.bot.sendPhoto(chatId, photo, options);
+  }
+
   async initialize() {
     try {
       const settings = await storage.getBotSettings();

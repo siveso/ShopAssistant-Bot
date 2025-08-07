@@ -13,6 +13,7 @@ import BotSettings from "@/pages/bot-settings";
 import Translations from "@/pages/translations";
 import Reports from "@/pages/reports";
 import Help from "@/pages/help";
+import Marketing from "@/pages/marketing";
 import Logout from "@/pages/logout";
 import NotFound from "@/pages/not-found";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/translations" component={Translations} />
       <Route path="/reports" component={Reports} />
       <Route path="/help" component={Help} />
+      <Route path="/marketing" component={Marketing} />
       <Route path="/logout" component={Logout} />
       <Route component={NotFound} />
     </Switch>
