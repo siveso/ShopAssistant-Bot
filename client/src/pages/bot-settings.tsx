@@ -14,6 +14,7 @@ interface BotSettings {
   id?: string;
   telegramBotToken?: string;
   instagramAccessToken?: string;
+  geminiApiKey?: string;
   welcomeMessageUz?: string;
   welcomeMessageRu?: string;
   contactInfo?: string;
@@ -35,6 +36,7 @@ export default function BotSettings() {
   const [formData, setFormData] = useState<BotSettings>({
     telegramBotToken: "",
     instagramAccessToken: "",
+    geminiApiKey: "",
     welcomeMessageUz: "Assalomu alaykum! Bizning online do'konimizga xush kelibsiz!",
     welcomeMessageRu: "Здравствуйте! Добро пожаловать в наш интернет-магазин!",
     contactInfo: "+998 90 123 45 67",
@@ -48,8 +50,10 @@ export default function BotSettings() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: BotSettings) => {
-      const response = await apiRequest("PUT", "/api/bot/settings", data);
-      return response.json();
+      return await apiRequest("/api/bot/settings", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       toast({
@@ -210,6 +214,16 @@ export default function BotSettings() {
                     value={formData.instagramAccessToken}
                     onChange={(e) => handleInputChange("instagramAccessToken", e.target.value)}
                     placeholder="IGQVJ..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="geminiApiKey">Gemini API Kaliti</Label>
+                  <Input
+                    id="geminiApiKey"
+                    type="password"
+                    value={formData.geminiApiKey}
+                    onChange={(e) => handleInputChange("geminiApiKey", e.target.value)}
+                    placeholder="AIzaSyC..."
                   />
                 </div>
               </CardContent>
