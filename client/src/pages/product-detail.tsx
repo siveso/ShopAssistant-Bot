@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Headphones } from "lucide-react";
+import { CartSidebar } from "@/components/cart/cart-sidebar";
+import { useCart } from "@/hooks/useCart";
 
 interface Product {
   id: string;
@@ -24,6 +26,7 @@ export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: [`/api/products/${params?.id}`],
@@ -77,15 +80,18 @@ export default function ProductDetail() {
               </Button>
             </Link>
             
-            <Select value={language} onValueChange={(value: "uz" | "ru") => setLanguage(value)}>
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="uz">🇺🇿 O'zbekcha</SelectItem>
-                <SelectItem value="ru">🇷🇺 Русский</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-4">
+              <CartSidebar language={language} />
+              <Select value={language} onValueChange={(value: "uz" | "ru") => setLanguage(value)}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="uz">🇺🇿 O'zbekcha</SelectItem>
+                  <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </header>
@@ -175,6 +181,7 @@ export default function ProductDetail() {
                   size="lg"
                   className="w-full bg-blue-600 hover:bg-blue-700"
                   disabled={product.stockQuantity === 0}
+                  onClick={() => addToCart(product, quantity)}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   {product.stockQuantity === 0 

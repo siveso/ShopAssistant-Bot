@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, ArrowLeft, Users, Award, Truck, Shield, Star, MessageCircle } from "lucide-react";
+import { CartSidebar } from "@/components/cart/cart-sidebar";
 
 export default function About() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
@@ -31,15 +32,18 @@ export default function About() {
               </div>
             </div>
             
-            <Select value={language} onValueChange={(value: "uz" | "ru") => setLanguage(value)}>
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="uz">🇺🇿 O'zbekcha</SelectItem>
-                <SelectItem value="ru">🇷🇺 Русский</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-4">
+              <CartSidebar language={language} />
+              <Select value={language} onValueChange={(value: "uz" | "ru") => setLanguage(value)}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="uz">🇺🇿 O'zbekcha</SelectItem>
+                  <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </header>

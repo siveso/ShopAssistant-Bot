@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, Search, Filter, Star } from "lucide-react";
+import { CartSidebar } from "@/components/cart/cart-sidebar";
+import { useCart } from "@/hooks/useCart";
 
 interface Product {
   id: string;
@@ -25,6 +27,7 @@ export default function Catalog() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const { addToCart } = useCart();
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["/api/products"],
@@ -78,6 +81,7 @@ export default function Catalog() {
                   {getText("Biz haqimizda", "О нас")}
                 </Button>
               </Link>
+              <CartSidebar language={language} />
               <Select value={language} onValueChange={(value: "uz" | "ru") => setLanguage(value)}>
                 <SelectTrigger className="w-24">
                   <SelectValue />
@@ -193,11 +197,11 @@ export default function Catalog() {
                         disabled={product.stockQuantity === 0}
                         onClick={(e) => {
                           e.preventDefault();
-                          // Handle add to cart logic here
+                          addToCart(product, 1);
                         }}
                       >
                         <ShoppingCart className="h-4 w-4 mr-1" />
-                        {getText("Ko'rish", "Смотреть")}
+                        {getText("Savatga", "В корзину")}
                       </Button>
                     </div>
                   </CardContent>

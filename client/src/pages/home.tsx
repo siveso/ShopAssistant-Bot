@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, Star, ArrowRight, MessageCircle, Truck, Shield, Award } from "lucide-react";
+import { CartSidebar } from "@/components/cart/cart-sidebar";
 
 export default function Home() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
@@ -34,6 +35,7 @@ export default function Home() {
                   {getText("Biz haqimizda", "О нас")}
                 </Button>
               </Link>
+              <CartSidebar language={language} />
               <Select value={language} onValueChange={(value: "uz" | "ru") => setLanguage(value)}>
                 <SelectTrigger className="w-24">
                   <SelectValue />

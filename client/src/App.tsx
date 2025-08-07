@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/hooks/use-sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { CartProvider } from "@/hooks/useCart";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import Orders from "@/pages/orders";
@@ -108,10 +109,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SidebarProvider>
-          <Toaster />
-          <AppLayout />
-        </SidebarProvider>
+        <CartProvider>
+          <SidebarProvider>
+            <Toaster />
+            <AppLayout />
+          </SidebarProvider>
+        </CartProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
