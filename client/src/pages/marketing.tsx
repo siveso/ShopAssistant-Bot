@@ -44,8 +44,10 @@ export default function Marketing() {
 
   const createMessageMutation = useMutation({
     mutationFn: async (data: Partial<MarketingMessage>) => {
-      const response = await apiRequest("POST", "/api/marketing/messages", data);
-      return response.json();
+      return await apiRequest("/api/marketing/messages", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       toast({ title: "Muvaffaqiyat", description: "Marketing xabari yaratildi" });
@@ -60,8 +62,10 @@ export default function Marketing() {
 
   const updateMessageMutation = useMutation({
     mutationFn: async ({ id, ...data }: { id: string } & Partial<MarketingMessage>) => {
-      const response = await apiRequest("PUT", `/api/marketing/messages/${id}`, data);
-      return response.json();
+      return await apiRequest(`/api/marketing/messages/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
       toast({ title: "Muvaffaqiyat", description: "Marketing xabari yangilandi" });
@@ -71,8 +75,9 @@ export default function Marketing() {
 
   const sendNowMutation = useMutation({
     mutationFn: async (messageId: string) => {
-      const response = await apiRequest("POST", `/api/marketing/send-now/${messageId}`);
-      return response.json();
+      return await apiRequest(`/api/marketing/send-now/${messageId}`, {
+        method: "POST",
+      });
     },
     onSuccess: (data) => {
       toast({ 
