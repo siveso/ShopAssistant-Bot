@@ -394,9 +394,13 @@ class TelegramBotService {
         const name = language === "uz" ? product.nameUz : product.nameRu;
         const description = language === "uz" ? product.descriptionUz : product.descriptionRu;
         
+        // Truncate description if it's too long to avoid telegram caption limit (1024 chars)
+        const truncatedDescription = description && description.length > 300 ? 
+          description.substring(0, 300) + "..." : description;
+        
         const productMessage = language === "uz" 
-          ? `📦 ${name}\n💰 Narxi: $${product.price}\n📝 ${description || ""}\n📦 Omborda: ${product.stockQuantity || 0} dona`
-          : `📦 ${name}\n💰 Цена: $${product.price}\n📝 ${description || ""}\n📦 На складе: ${product.stockQuantity || 0} шт`;
+          ? `📦 ${name}\n💰 Narxi: $${product.price}${truncatedDescription ? '\n📝 ' + truncatedDescription : ''}\n📦 Omborda: ${product.stockQuantity || 0} dona`
+          : `📦 ${name}\n💰 Цена: $${product.price}${truncatedDescription ? '\n📝 ' + truncatedDescription : ''}\n📦 На складе: ${product.stockQuantity || 0} шт`;
 
         const keyboard = {
           inline_keyboard: [
@@ -570,9 +574,14 @@ class TelegramBotService {
 
       const name = language === "uz" ? product.nameUz : product.nameRu;
       const description = language === "uz" ? product.descriptionUz : product.descriptionRu;
+      
+      // Truncate description if it's too long to avoid telegram caption limit
+      const truncatedDescription = description && description.length > 200 ? 
+        description.substring(0, 200) + "..." : description;
+      
       const successMessage = language === "uz"
-        ? `✅ "${name}" mahsuloti savatingizga qo'shildi!\n💰 Narxi: $${product.price}\n📝 ${description || ""}`
-        : `✅ "${name}" добавлен в корзину!\n💰 Цена: $${product.price}\n📝 ${description || ""}`;
+        ? `✅ "${name}" mahsuloti savatingizga qo'shildi!\n💰 Narxi: $${product.price}${truncatedDescription ? '\n📝 ' + truncatedDescription : ''}`
+        : `✅ "${name}" добавлен в корзину!\n💰 Цена: $${product.price}${truncatedDescription ? '\n📝 ' + truncatedDescription : ''}`;
 
       const keyboard = {
         inline_keyboard: [

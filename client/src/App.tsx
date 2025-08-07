@@ -8,6 +8,12 @@ import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import Orders from "@/pages/orders";
 import Users from "@/pages/users";
+import Conversations from "@/pages/conversations";
+import BotSettings from "@/pages/bot-settings";
+import Translations from "@/pages/translations";
+import Reports from "@/pages/reports";
+import Help from "@/pages/help";
+import Logout from "@/pages/logout";
 import NotFound from "@/pages/not-found";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
@@ -19,6 +25,12 @@ function Router() {
       <Route path="/products" component={Products} />
       <Route path="/orders" component={Orders} />
       <Route path="/users" component={Users} />
+      <Route path="/conversations" component={Conversations} />
+      <Route path="/bot-settings" component={BotSettings} />
+      <Route path="/translations" component={Translations} />
+      <Route path="/reports" component={Reports} />
+      <Route path="/help" component={Help} />
+      <Route path="/logout" component={Logout} />
       <Route component={NotFound} />
     </Switch>
   );
