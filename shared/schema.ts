@@ -73,6 +73,15 @@ export const botSettings = pgTable("bot_settings", {
   telegramBotToken: text("telegram_bot_token"),
   instagramAccessToken: text("instagram_access_token"),
   geminiApiKey: text("gemini_api_key"),
+  // Company Information
+  companyName: text("company_name"),
+  companyDescriptionUz: text("company_description_uz"),
+  companyDescriptionRu: text("company_description_ru"),
+  companyAddress: text("company_address"),
+  workingHours: text("working_hours"),
+  website: text("website"),
+  email: text("email"),
+  // Settings
   isActive: boolean("is_active").default(true),
   ruleBasedResponses: jsonb("rule_based_responses").default({}),
   updatedAt: timestamp("updated_at").defaultNow(),

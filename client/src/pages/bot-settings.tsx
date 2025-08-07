@@ -15,6 +15,15 @@ interface BotSettings {
   telegramBotToken?: string;
   instagramAccessToken?: string;
   geminiApiKey?: string;
+  // Company Information
+  companyName?: string;
+  companyDescriptionUz?: string;
+  companyDescriptionRu?: string;
+  companyAddress?: string;
+  workingHours?: string;
+  website?: string;
+  email?: string;
+  // Bot Messages
   welcomeMessageUz?: string;
   welcomeMessageRu?: string;
   contactInfo?: string;
@@ -37,6 +46,15 @@ export default function BotSettings() {
     telegramBotToken: "",
     instagramAccessToken: "",
     geminiApiKey: "",
+    // Company Information
+    companyName: "",
+    companyDescriptionUz: "",
+    companyDescriptionRu: "",
+    companyAddress: "",
+    workingHours: "09:00 - 18:00 (Dush-Juma)",
+    website: "",
+    email: "",
+    // Bot Messages
     welcomeMessageUz: "Assalomu alaykum! Bizning online do'konimizga xush kelibsiz!",
     welcomeMessageRu: "Здравствуйте! Добро пожаловать в наш интернет-магазин!",
     contactInfo: "+998 90 123 45 67",
@@ -115,8 +133,9 @@ export default function BotSettings() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="general">Umumiy</TabsTrigger>
+            <TabsTrigger value="company">Kompaniya</TabsTrigger>
             <TabsTrigger value="messages">Xabarlar</TabsTrigger>
             <TabsTrigger value="api">API Kalitlari</TabsTrigger>
             <TabsTrigger value="menu">Menyu</TabsTrigger>
@@ -155,6 +174,91 @@ export default function BotSettings() {
                     onCheckedChange={(checked) => handleInputChange("aiEnabled", checked)}
                   />
                   <Label>AI Yordamchi Faol</Label>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="company" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Kompaniya Ma'lumotlari</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="companyName">Kompaniya Nomi</Label>
+                    <Input
+                      id="companyName"
+                      value={formData.companyName}
+                      onChange={(e) => handleInputChange("companyName", e.target.value)}
+                      placeholder="Kompaniya nomini kiriting"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Manzil</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      placeholder="info@company.uz"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="website">Veb-sayt</Label>
+                    <Input
+                      id="website"
+                      value={formData.website}
+                      onChange={(e) => handleInputChange("website", e.target.value)}
+                      placeholder="https://company.uz"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="workingHours">Ish Vaqti</Label>
+                    <Input
+                      id="workingHours"
+                      value={formData.workingHours}
+                      onChange={(e) => handleInputChange("workingHours", e.target.value)}
+                      placeholder="09:00 - 18:00 (Dush-Juma)"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="companyAddress">Manzil</Label>
+                  <Textarea
+                    id="companyAddress"
+                    value={formData.companyAddress}
+                    onChange={(e) => handleInputChange("companyAddress", e.target.value)}
+                    rows={2}
+                    placeholder="Kompaniya manzilini kiriting"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="companyDescUz">Kompaniya Tavsifi (O'zbekcha)</Label>
+                  <Textarea
+                    id="companyDescUz"
+                    value={formData.companyDescriptionUz}
+                    onChange={(e) => handleInputChange("companyDescriptionUz", e.target.value)}
+                    rows={3}
+                    placeholder="Kompaniyangiz haqida qisqa ma'lumot o'zbekcha"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="companyDescRu">Компания Описание (Русский)</Label>
+                  <Textarea
+                    id="companyDescRu"
+                    value={formData.companyDescriptionRu}
+                    onChange={(e) => handleInputChange("companyDescriptionRu", e.target.value)}
+                    rows={3}
+                    placeholder="Краткая информация о компании на русском языке"
+                  />
                 </div>
               </CardContent>
             </Card>
