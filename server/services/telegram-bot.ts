@@ -384,7 +384,9 @@ class TelegramBotService {
     if (!this.bot) return;
 
     try {
+      console.log("Fetching products for catalog...");
       const products = await storage.getAllProducts();
+      console.log("Products fetched:", products.length, products.map(p => ({id: p.id, nameUz: p.nameUz})));
       
       if (products.length === 0) {
         const message = language === "uz" 
