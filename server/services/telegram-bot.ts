@@ -3,9 +3,17 @@ import { storage } from "../storage";
 import { generateChatbotResponse, analyzeUserIntent, type ChatContext } from "./gemini";
 import botResponsesData from "../config/bot-responses.json";
 
+interface UserState {
+  awaitingCheckoutInfo?: boolean;
+  awaitingQuantity?: boolean;
+  productId?: string;
+  language?: "uz" | "ru";
+}
+
 class TelegramBotService {
   private bot: TelegramBot | null = null;
   private isActive = false;
+  private userStates: Map<string, UserState> = new Map();
 
   // Public methods for marketing scheduler
   public async sendMessage(chatId: string | number, text: string, options?: any) {
@@ -247,6 +255,12 @@ class TelegramBotService {
     const userState = this.userStates.get(userId);
     if (userState?.awaitingCheckoutInfo) {
       await this.handleCheckoutInfo(chatId, userId, message);
+      return;
+    }
+
+    // Check if user is providing quantity for a product
+    if (userState?.awaitingQuantity) {
+      await this.handleQuantityInput(chatId, userId, message);
       return;
     }
 
@@ -645,20 +659,20 @@ class TelegramBotService {
 
       const name = language === "uz" ? product.nameUz : product.nameRu;
       const message = language === "uz" 
-        ? `📦 ${name}\n💰 Narxi: $${product.price}\n\nNechta dona kerak?`
-        : `📦 ${name}\n💰 Цена: $${product.price}\n\nСколько штук нужно?`;
+        ? `📦 ${name}\n💰 Narxi: $${product.price}\n📦 Omborda: ${product.stockQuantity || 0} dona\n\n🔢 Nechta dona kerak?\n\n📝 Miqdorni kiriting (masalan: 1, 5, 50, 200, 1000):`
+        : `📦 ${name}\n💰 Цена: $${product.price}\n📦 На складе: ${product.stockQuantity || 0} шт\n\n🔢 Сколько штук нужно?\n\n📝 Введите количество (например: 1, 5, 50, 200, 1000):`;
 
       const keyboard = {
         inline_keyboard: [
           [
             { text: "1", callback_data: `quantity_${productId}_1` },
-            { text: "2", callback_data: `quantity_${productId}_2` },
-            { text: "3", callback_data: `quantity_${productId}_3` }
-          ],
-          [
-            { text: "4", callback_data: `quantity_${productId}_4` },
             { text: "5", callback_data: `quantity_${productId}_5` },
             { text: "10", callback_data: `quantity_${productId}_10` }
+          ],
+          [
+            { text: "50", callback_data: `quantity_${productId}_50` },
+            { text: "100", callback_data: `quantity_${productId}_100` },
+            { text: "500", callback_data: `quantity_${productId}_500` }
           ],
           [{ 
             text: language === "uz" ? "⬅️ Orqaga" : "⬅️ Назад", 
@@ -666,6 +680,13 @@ class TelegramBotService {
           }]
         ]
       };
+
+      // Set user state to expect quantity input
+      this.userStates.set(userId, { 
+        awaitingQuantity: true, 
+        productId: productId,
+        language: language
+      });
 
       await this.bot.sendMessage(chatId, message, { reply_markup: keyboard });
     } catch (error) {
@@ -776,7 +797,53 @@ class TelegramBotService {
     }
   }
 
-  private userStates = new Map<string, any>();
+  private async handleQuantityInput(chatId: number, userId: string, message: string) {
+    if (!this.bot) return;
+
+    try {
+      const userState = this.userStates.get(userId);
+      if (!userState?.productId || !userState.language) return;
+
+      const quantity = parseInt(message.trim());
+      
+      // Validate quantity
+      if (isNaN(quantity) || quantity < 1) {
+        const errorMessage = userState.language === "uz"
+          ? "❌ Noto'g'ri miqdor. Iltimos, raqam kiriting (masalan: 5, 100, 500):"
+          : "❌ Неправильное количество. Пожалуйста, введите число (например: 5, 100, 500):";
+        await this.bot.sendMessage(chatId, errorMessage);
+        return;
+      }
+
+      if (quantity > 10000) {
+        const errorMessage = userState.language === "uz"
+          ? "❌ Juda ko'p miqdor. Maksimal 10,000 dona buyurtma berish mumkin."
+          : "❌ Слишком большое количество. Максимум можно заказать 10,000 штук.";
+        await this.bot.sendMessage(chatId, errorMessage);
+        return;
+      }
+
+      // Process the quantity selection
+      await this.handleQuantitySelection(
+        chatId, 
+        userId, 
+        userState.productId, 
+        quantity, 
+        userState.language
+      );
+      
+      // Clear user state
+      this.userStates.delete(userId);
+      
+    } catch (error) {
+      console.error("Error handling quantity input:", error);
+      const errorMessage = userState?.language === "uz"
+        ? "Miqdorni qayta ishlashda xatolik yuz berdi."
+        : "Ошибка при обработке количества.";
+      
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
 
   private async handleCartRequest(chatId: number, userId: string, language: "uz" | "ru") {
     if (!this.bot) return;

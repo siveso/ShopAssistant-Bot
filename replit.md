@@ -42,6 +42,8 @@ Migration Status: Successfully completed migration from Replit Agent to Replit e
 - **Admin Authentication**: Working login system with bcrypt password hashing
 - **Bot Stability**: Fixed 409 conflicts and improved polling mechanism with proper cleanup
 - **Product Catalog**: 8 active products (Samsung Galaxy S24, iPhone 15 Pro, MacBook Air M3, etc.) for testing
+- **Flexible Quantity Input**: Users can now input any quantity (1-10,000) via text message instead of limited buttons
+- **Enhanced UX**: Quick quantity buttons (1, 5, 10, 50, 100, 500) plus custom number input support
 
 ## System Architecture
 
