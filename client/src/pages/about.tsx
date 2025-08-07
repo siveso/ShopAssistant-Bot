@@ -33,6 +33,11 @@ export default function About() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link href="/blog">
+                <Button variant="ghost" size="sm">
+                  {getText("Blog", "Блог")}
+                </Button>
+              </Link>
               <CartSidebar language={language} />
               <Select value={language} onValueChange={(value: "uz" | "ru") => setLanguage(value)}>
                 <SelectTrigger className="w-24">

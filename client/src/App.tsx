@@ -24,6 +24,9 @@ import Catalog from "@/pages/catalog";
 import ProductDetail from "@/pages/product-detail";
 import About from "@/pages/about";
 import Home from "@/pages/home";
+import BlogPage from "@/pages/blog";
+import BlogDetailPage from "@/pages/blog-detail";
+import BlogsPage from "@/pages/blogs";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 
@@ -46,6 +49,8 @@ function Router() {
     <Switch>
       <Route path="/catalog" component={Catalog} />
       <Route path="/product/:id" component={ProductDetail} />
+      <Route path="/blog" component={BlogPage} />
+      <Route path="/blog/:slug" component={BlogDetailPage} />
       <Route path="/about" component={About} />
       <Route path="/home" component={Home} />
       <Route path="/login" component={Login} />
@@ -63,6 +68,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/help" component={Help} />
           <Route path="/marketing" component={Marketing} />
+          <Route path="/admin/blogs" component={BlogsPage} />
           <Route path="/logout" component={Logout} />
         </>
       ) : (
@@ -80,6 +86,7 @@ function AppLayout() {
   const isPublicRoute = window.location.pathname === '/' ||
                        window.location.pathname.startsWith('/catalog') || 
                        window.location.pathname.startsWith('/product/') ||
+                       window.location.pathname.startsWith('/blog') ||
                        window.location.pathname === '/about' ||
                        window.location.pathname === '/home' ||
                        window.location.pathname === '/login';

@@ -80,6 +80,11 @@ export default function Catalog() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link href="/blog">
+                <Button variant="ghost" size="sm">
+                  {getText("Blog", "Блог")}
+                </Button>
+              </Link>
               <Link href="/about">
                 <Button variant="ghost" size="sm">
                   {getText("Biz haqimizda", "О нас")}

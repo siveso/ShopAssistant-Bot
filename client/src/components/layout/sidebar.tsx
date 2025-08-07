@@ -6,6 +6,7 @@ const navigationItems = [
   { name: "Boshqaruv Paneli", path: "/", icon: "fas fa-chart-line" },
   { name: "Mahsulotlar", path: "/products", icon: "fas fa-box" },
   { name: "Buyurtmalar", path: "/orders", icon: "fas fa-shopping-cart" },
+  { name: "Blog", path: "/admin/blogs", icon: "fas fa-blog" },
   { name: "Foydalanuvchilar", path: "/users", icon: "fas fa-users" },
   { name: "Suhbatlar", path: "/conversations", icon: "fas fa-comments" },
   { name: "Bot Sozlamalari", path: "/bot-settings", icon: "fas fa-cogs" },

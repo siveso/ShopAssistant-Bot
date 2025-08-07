@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema, insertTranslationSchema, insertCategorySchema } from "@shared/schema";
+import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema, insertTranslationSchema, insertCategorySchema, insertBlogSchema } from "@shared/schema";
 import { telegramBot } from "./services/telegram-bot";
 import { MarketingScheduler } from "./services/marketing-scheduler";
 import { AuthService, requireAuth } from "./auth";
@@ -522,6 +522,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting catalog SEO:", error);
       res.status(500).json({ error: "Failed to generate catalog SEO data" });
+    }
+  });
+
+  // Blog Routes
+  app.get("/api/blogs", async (req, res) => {
+    try {
+      const blogs = await storage.getAllBlogs();
+      res.json(blogs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch blogs" });
+    }
+  });
+
+  app.get("/api/blogs/:id", async (req, res) => {
+    try {
+      let blog;
+      const { id } = req.params;
+      
+      // Check if it's a slug or ID
+      if (id.includes('-') && !id.startsWith('blog-')) {
+        blog = await storage.getBlogBySlug(id);
+      } else {
+        blog = await storage.getBlog(id);
+      }
+
+      if (!blog) {
+        return res.status(404).json({ error: "Blog not found" });
+      }
+      res.json(blog);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch blog" });
+    }
+  });
+
+  app.post("/api/blogs", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertBlogSchema.parse(req.body);
+      const blog = await storage.createBlog(validatedData);
+      res.json(blog);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to create blog" });
+    }
+  });
+
+  app.patch("/api/blogs/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const blog = await storage.updateBlog(id, req.body);
+      if (!blog) {
+        return res.status(404).json({ error: "Blog not found" });
+      }
+      res.json(blog);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update blog" });
+    }
+  });
+
+  app.delete("/api/blogs/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteBlog(id);
+      if (!success) {
+        return res.status(404).json({ error: "Blog not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete blog" });
+    }
+  });
+
+  app.post("/api/blogs/:id/view", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.incrementBlogViews(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to increment view count" });
     }
   });
 

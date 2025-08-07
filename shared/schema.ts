@@ -86,6 +86,25 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const blogs = pgTable("blogs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  titleUz: text("title_uz").notNull(),
+  titleRu: text("title_ru").notNull(),
+  contentUz: text("content_uz").notNull(),
+  contentRu: text("content_ru").notNull(),
+  excerptUz: text("excerpt_uz"),
+  excerptRu: text("excerpt_ru"),
+  imageUrl: text("image_url"),
+  slug: text("slug").unique().notNull(),
+  authorName: text("author_name").default("Admin"),
+  tags: jsonb("tags").default([]),
+  isPublished: boolean("is_published").default(false),
+  publishedAt: timestamp("published_at"),
+  viewCount: integer("view_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const botSettings = pgTable("bot_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   telegramBotToken: text("telegram_bot_token"),
@@ -192,6 +211,13 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
   createdAt: true,
 });
 
+export const insertBlogSchema = createInsertSchema(blogs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  viewCount: true,
+});
+
 export const loginSchema = z.object({
   username: z.string().min(3, "Username kamida 3 ta harf bo'lishi kerak"),
   password: z.string().min(6, "Parol kamida 6 ta harf bo'lishi kerak"),
@@ -218,6 +244,9 @@ export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 
 export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
+
+export type Blog = typeof blogs.$inferSelect;
+export type InsertBlog = z.infer<typeof insertBlogSchema>;
 
 export type AdminSession = typeof adminSessions.$inferSelect;
 

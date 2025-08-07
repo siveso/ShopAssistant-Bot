@@ -1,5 +1,5 @@
 import { 
-  users, products, orders, conversations, botSettings, adminUsers, adminSessions, translations, categories,
+  users, products, orders, conversations, botSettings, adminUsers, adminSessions, translations, categories, blogs,
   type User, type InsertUser,
   type Product, type InsertProduct,
   type Order, type InsertOrder,
@@ -8,7 +8,8 @@ import {
   type AdminUser, type InsertAdminUser,
   type AdminSession,
   type Translation, type InsertTranslation,
-  type Category, type InsertCategory
+  type Category, type InsertCategory,
+  type Blog, type InsertBlog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, like, count } from "drizzle-orm";
@@ -80,6 +81,15 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | undefined>;
   deleteCategory(id: string): Promise<boolean>;
+
+  // Blogs
+  getAllBlogs(): Promise<Blog[]>;
+  getBlog(id: string): Promise<Blog | undefined>;
+  getBlogBySlug(slug: string): Promise<Blog | undefined>;
+  createBlog(blog: InsertBlog): Promise<Blog>;
+  updateBlog(id: string, blog: Partial<InsertBlog>): Promise<Blog | undefined>;
+  deleteBlog(id: string): Promise<boolean>;
+  incrementBlogViews(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -614,6 +624,34 @@ class FallbackStorage implements IStorage {
   async deleteCategory(id: string): Promise<boolean> {
     return true;
   }
+
+  // Blog methods for fallback storage
+  async getAllBlogs(): Promise<Blog[]> { return []; }
+  async getBlog(id: string): Promise<Blog | undefined> { return undefined; }
+  async getBlogBySlug(slug: string): Promise<Blog | undefined> { return undefined; }
+  async createBlog(blog: InsertBlog): Promise<Blog> {
+    return {
+      id: "blog-" + Date.now(),
+      titleUz: blog.titleUz,
+      titleRu: blog.titleRu,
+      contentUz: blog.contentUz,
+      contentRu: blog.contentRu,
+      excerptUz: blog.excerptUz || null,
+      excerptRu: blog.excerptRu || null,
+      imageUrl: blog.imageUrl || null,
+      slug: blog.slug,
+      authorName: blog.authorName || null,
+      tags: blog.tags || null,
+      isPublished: blog.isPublished || null,
+      publishedAt: blog.publishedAt || null,
+      viewCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+  async updateBlog(id: string, blog: Partial<InsertBlog>): Promise<Blog | undefined> { return undefined; }
+  async deleteBlog(id: string): Promise<boolean> { return false; }
+  async incrementBlogViews(id: string): Promise<void> { return; }
 
   async getDashboardStats(): Promise<{ totalUsers: number; activeOrders: number; totalRevenue: number; messagesCount: number; }> {
     return { totalUsers: 0, activeOrders: 0, totalRevenue: 0, messagesCount: 0 };

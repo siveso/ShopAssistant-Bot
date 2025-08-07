@@ -54,6 +54,11 @@ export default function Home() {
                   {getText("Katalog", "Каталог")}
                 </Button>
               </Link>
+              <Link href="/blog">
+                <Button variant="ghost" size="sm">
+                  {getText("Blog", "Блог")}
+                </Button>
+              </Link>
               <Link href="/about">
                 <Button variant="ghost" size="sm">
                   {getText("Biz haqimizda", "О нас")}
