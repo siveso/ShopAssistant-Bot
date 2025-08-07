@@ -1,0 +1,16 @@
+{
+  "faq": [
+    {
+      "question": "Qanday buyurtma beraman?",
+      "answer": "Buyurtma berish juda oson:\n1. Kerakli mahsulotni tanlang\n2. 'Buyurtma berish' tugmasini bosing\n3. Ma'lumotlaringizni kiriting\n4. To'lov usulini tanlang\n5. Buyurtmani tasdiqlang"
+    },
+    {
+      "question": "Yetkazib berish qancha vaqt oladi?",
+      "answer": "Yetkazib berish muddatlari:\n• Toshkent - 1-2 kun\n• Toshkent viloyati - 2-3 kun\n• Boshqa viloyatlar - 3-5 kun"
+    },
+    {
+      "question": "Mahsulotni qaytarish mumkinmi?",
+      "answer": "Ha, mahsulotni 14 kun ichida qaytarish mumkin:\n• Mahsulot buzilmagan bo'lishi kerak\n• Asl qadoqi saqlanishi kerak\n• Chek yoki buyurtma raqami bo'lishi kerak"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "uz": {
+    "salom": "Assalomu alaykum! Xush kelibsiz. Sizga qanday yordam bera olaman?",
+    "yetkazib berish": "🚚 Yetkazib berish shartlari:\n• Toshkent bo'ylab - bepul\n• Toshkent viloyati - 15,000 so'm\n• Boshqa viloyatlar - 25,000 so'm\n• Yetkazib berish vaqti: 1-3 ish kuni",
+    "to'lov": "💳 To'lov usullari:\n• Naqd pul (yetkazib berishda)\n• Plastik karta\n• Click/Payme\n• Bank o'tkazmasi",
+    "kontakt": "📞 Biz bilan bog'lanish:\n• Telefon: +998 90 123 45 67\n• Telegram: @shop_support\n• Ish vaqti: 9:00-19:00 (dushanba-shanba)",
+    "aksiya": "🎉 Joriy aksiyalar:\n• Barcha telefonlarga 15% chegirma\n• 2 ta mahsulot olganingizda 3-chisi bepul\n• Yetkazib berish bepul (100$ dan yuqori xaridlarda)",
+    "kafolat": "🛡️ Kafolat shartlari:\n• Barcha mahsulotlarga 1 yillik kafolat\n• Defekt topilgan taqdirda bepul almashtirish\n• Kafolat xizmati bepul",
+    "aloqa": "Operator bilan bog'lanish uchun 'Operator' deb yozing yoki qo'ng'iroq qiling: +998 90 123 45 67"
+  },
+  "ru": {
+    "привет": "Здравствуйте! Добро пожаловать. Чем могу помочь?",
+    "доставка": "🚚 Условия доставки:\n• По Ташкенту - бесплатно\n• Ташкентская область - 15,000 сум\n• Другие регионы - 25,000 сум\n• Время доставки: 1-3 рабочих дня",
+    "оплата": "💳 Способы оплаты:\n• Наличные (при доставке)\n• Банковская карта\n• Click/Payme\n• Банковский перевод",
+    "контакт": "📞 Связь с нами:\n• Телефон: +998 90 123 45 67\n• Telegram: @shop_support\n• Время работы: 9:00-19:00 (пн-сб)",
+    "акция": "🎉 Текущие акции:\n• Скидка 15% на все телефоны\n• При покупке 2 товаров 3-й бесплатно\n• Бесплатная доставка (при заказе свыше $100)",
+    "гарантия": "🛡️ Условия гарантии:\n• Гарантия 1 год на все товары\n• Бесплатная замена при обнаружении брака\n• Гарантийное обслуживание бесплатно",
+    "связь": "Для связи с оператором напишите 'Оператор' или звоните: +998 90 123 45 67"
+  }
+}
