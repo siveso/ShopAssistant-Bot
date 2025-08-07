@@ -10,6 +10,7 @@ export function useAuth() {
   // Initialize session token from localStorage
   useEffect(() => {
     const token = localStorage.getItem('sessionToken');
+    console.log('Initializing auth with token:', token);
     setSessionToken(token);
     setIsInitialized(true);
   }, []);
@@ -29,7 +30,8 @@ export function useAuth() {
         return response as AdminUser;
       } catch (error: any) {
         // If unauthorized, clear stored data
-        if (error.message?.includes('401')) {
+        if (error.message?.includes('401') || error.message?.includes('Yaroqsiz')) {
+          console.log('Auth error, clearing localStorage:', error.message);
           localStorage.removeItem('sessionToken');
           localStorage.removeItem('admin');
           setSessionToken(null);

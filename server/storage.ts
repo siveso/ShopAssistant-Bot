@@ -308,11 +308,15 @@ class FallbackStorage implements IStorage {
       ...sessionData,
       createdAt: new Date()
     };
+    console.log(`Fallback: Creating session with token: ${sessionData.sessionToken}`);
     this.sessions.set(sessionData.sessionToken, session);
+    console.log(`Fallback: Session created. Total sessions: ${this.sessions.size}`);
     return session;
   }
 
   async getAdminSession(sessionToken: string): Promise<AdminSession | undefined> {
+    console.log(`Fallback: Looking for session token: ${sessionToken}`);
+    console.log(`Fallback: Available sessions:`, Array.from(this.sessions.keys()));
     return this.sessions.get(sessionToken);
   }
 

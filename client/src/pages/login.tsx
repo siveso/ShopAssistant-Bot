@@ -36,7 +36,13 @@ export default function Login() {
       });
     },
     onSuccess: (data) => {
-      // Store session token in localStorage
+      console.log('Login successful, storing token:', data.sessionToken);
+      
+      // Clear any existing auth data first
+      localStorage.removeItem('sessionToken');
+      localStorage.removeItem('admin');
+      
+      // Store new session token in localStorage
       localStorage.setItem('sessionToken', data.sessionToken);
       localStorage.setItem('admin', JSON.stringify(data.admin));
       
@@ -45,8 +51,11 @@ export default function Login() {
         description: `Xush kelibsiz, ${data.admin.fullName}!`,
       });
       
-      // Redirect to dashboard
-      setLocation("/");
+      // Small delay to ensure localStorage is updated
+      setTimeout(() => {
+        setLocation("/");
+        window.location.reload(); // Force a refresh to reinitialize auth
+      }, 100);
     },
     onError: (error: any) => {
       toast({
@@ -135,6 +144,16 @@ export default function Login() {
             <p>Demo ma'lumotlar:</p>
             <p>Username: <code className="bg-gray-100 px-2 py-1 rounded">admin</code></p>
             <p>Parol: <code className="bg-gray-100 px-2 py-1 rounded">admin123</code></p>
+            
+            <button 
+              onClick={() => {
+                localStorage.clear();
+                window.location.reload();
+              }}
+              className="mt-3 text-xs text-blue-600 underline hover:text-blue-800"
+            >
+              Browser ma'lumotlarini tozalash (agar muammo bo'lsa)
+            </button>
           </div>
         </CardContent>
       </Card>
