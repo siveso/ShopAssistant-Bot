@@ -395,21 +395,33 @@ class TelegramBotService {
         const description = language === "uz" ? product.descriptionUz : product.descriptionRu;
         
         const productMessage = language === "uz" 
-          ? `📦 ${name}\n💰 Narxi: $${product.price}\n📝 ${description}\n📦 Omborda: ${product.stockQuantity} dona`
-          : `📦 ${name}\n💰 Цена: $${product.price}\n📝 ${description}\n📦 На складе: ${product.stockQuantity} шт`;
+          ? `📦 ${name}\n💰 Narxi: $${product.price}\n📝 ${description || ""}\n📦 Omborda: ${product.stockQuantity || 0} dona`
+          : `📦 ${name}\n💰 Цена: $${product.price}\n📝 ${description || ""}\n📦 На складе: ${product.stockQuantity || 0} шт`;
 
         const keyboard = {
-          reply_markup: {
-            inline_keyboard: [
-              [{ 
-                text: language === "uz" ? "Buyurtma berish" : "Заказать", 
-                callback_data: `order_${product.id}` 
-              }]
-            ]
-          }
+          inline_keyboard: [
+            [{ 
+              text: language === "uz" ? "Buyurtma berish" : "Заказать", 
+              callback_data: `order_${product.id}` 
+            }]
+          ]
         };
 
-        await this.bot.sendMessage(chatId, productMessage, keyboard);
+        // Send photo if available, otherwise send text message
+        if (product.imageUrl) {
+          try {
+            await this.bot.sendPhoto(chatId, product.imageUrl, {
+              caption: productMessage,
+              reply_markup: keyboard
+            });
+          } catch (error) {
+            console.error(`Error sending photo for product ${product.id}:`, error);
+            // Fallback to text message if photo fails
+            await this.bot.sendMessage(chatId, productMessage, { reply_markup: keyboard });
+          }
+        } else {
+          await this.bot.sendMessage(chatId, productMessage, { reply_markup: keyboard });
+        }
       }
     } catch (error) {
       console.error("Error handling catalog request:", error);
@@ -557,20 +569,32 @@ class TelegramBotService {
       });
 
       const name = language === "uz" ? product.nameUz : product.nameRu;
+      const description = language === "uz" ? product.descriptionUz : product.descriptionRu;
       const successMessage = language === "uz"
-        ? `✅ "${name}" mahsuloti savatingizga qo'shildi!\n💰 Narxi: $${product.price}`
-        : `✅ "${name}" добавлен в корзину!\n💰 Цена: $${product.price}`;
+        ? `✅ "${name}" mahsuloti savatingizga qo'shildi!\n💰 Narxi: $${product.price}\n📝 ${description || ""}`
+        : `✅ "${name}" добавлен в корзину!\n💰 Цена: $${product.price}\n📝 ${description || ""}`;
 
       const keyboard = {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: language === "uz" ? "🛒 Savatni ko'rish" : "🛒 Посмотреть корзину", callback_data: "cart" }],
-            [{ text: language === "uz" ? "📦 Katalog" : "📦 Каталог", callback_data: "catalog" }]
-          ]
-        }
+        inline_keyboard: [
+          [{ text: language === "uz" ? "🛒 Savatni ko'rish" : "🛒 Посмотреть корзину", callback_data: "cart" }],
+          [{ text: language === "uz" ? "📦 Katalog" : "📦 Каталог", callback_data: "catalog" }]
+        ]
       };
 
-      await this.bot.sendMessage(chatId, successMessage, keyboard);
+      // Send photo with success message if available
+      if (product.imageUrl) {
+        try {
+          await this.bot.sendPhoto(chatId, product.imageUrl, {
+            caption: successMessage,
+            reply_markup: keyboard
+          });
+        } catch (error) {
+          console.error(`Error sending photo for order confirmation ${product.id}:`, error);
+          await this.bot.sendMessage(chatId, successMessage, { reply_markup: keyboard });
+        }
+      } else {
+        await this.bot.sendMessage(chatId, successMessage, { reply_markup: keyboard });
+      }
     } catch (error) {
       console.error("Error handling product order:", error);
       const errorMessage = language === "uz"
