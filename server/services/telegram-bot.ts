@@ -20,6 +20,16 @@ class TelegramBotService {
 
   async initialize() {
     try {
+      // Stop existing bot if running
+      if (this.bot) {
+        try {
+          await this.bot.stopPolling();
+          this.bot = null;
+        } catch (e) {
+          console.log("Previous bot instance stopped");
+        }
+      }
+
       const settings = await storage.getBotSettings();
       const token = settings?.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN;
       
@@ -27,9 +37,29 @@ class TelegramBotService {
         throw new Error("Telegram bot token not found");
       }
 
-      this.bot = new TelegramBot(token, { polling: true });
+      this.bot = new TelegramBot(token, { 
+        polling: {
+          interval: 2000,
+          autoStart: false,
+          params: {
+            timeout: 10
+          }
+        }
+      });
+      
       this.setupEventHandlers();
-      this.isActive = true;
+      
+      // Start polling with error handling
+      try {
+        await this.bot.startPolling({
+          restart: true
+        });
+        this.isActive = true;
+      } catch (error) {
+        console.error("Polling start error:", error);
+        this.isActive = false;
+        throw error;
+      }
       
       console.log("Telegram bot initialized successfully");
     } catch (error) {
@@ -149,6 +179,9 @@ class TelegramBotService {
         else if (query.data === 'continue_shopping') {
           await this.handleCatalogRequest(chatId, language);
         }
+        else if (query.data === 'clear_cart') {
+          await this.handleClearCart(chatId, userId, language);
+        }
         else if (query.data === 'contact_operator') {
           await this.handleOperatorRequest(chatId, language);
         }
@@ -165,7 +198,7 @@ class TelegramBotService {
           await this.handleOrderConfirmation(chatId, userId, language);
         }
         else if (query.data === 'clear_cart') {
-          await this.handleCartClear(chatId, userId, language);
+          await this.handleClearCart(chatId, userId, language);
         }
         else if (query.data === 'live_operator') {
           await this.handleOperatorRequest(chatId, language);
@@ -469,30 +502,33 @@ class TelegramBotService {
     try {
       console.log("Fetching products for catalog...");
       const products = await storage.getAllProducts();
-      console.log("Products fetched:", products.length, products.map(p => ({id: p.id, nameUz: p.nameUz})));
+      console.log("Products fetched:", products.length, products.map(p => ({id: p.id, nameUz: p.nameUz, isActive: p.isActive})));
       
-      if (products.length === 0) {
+      const activeProducts = products.filter(p => p.isActive);
+      console.log("Active products:", activeProducts.length);
+      
+      if (activeProducts.length === 0) {
         const message = language === "uz" 
-          ? "Hozirda katalogda mahsulot yo'q. Tez orada yangi mahsulotlar qo'shiladi!"
-          : "В каталоге пока нет товаров. Скоро появятся новые товары!";
+          ? "🛍️ Hozirda faol mahsulotlar yo'q. Tez orada yangi mahsulotlar qo'shamiz!"
+          : "🛍️ В данный момент нет активных товаров. Скоро добавим новые товары!";
         
         await this.bot.sendMessage(chatId, message);
         return;
       }
 
       const catalogMessage = language === "uz" 
-        ? "📦 Bizning katalog:"
-        : "📦 Наш каталог:";
+        ? `📦 Bizning katalogimiz (${activeProducts.length} ta mahsulot):`
+        : `📦 Наш каталог (${activeProducts.length} товаров):`;
       
       await this.bot.sendMessage(chatId, catalogMessage);
       
-      // Show first 5 products with simplified info
-      for (const product of products.slice(0, 5)) {
+      // Show first 8 products with simplified info
+      for (const product of activeProducts.slice(0, 8)) {
         const name = language === "uz" ? product.nameUz : product.nameRu;
         
         const productMessage = language === "uz" 
-          ? `📦 ${name}\n💰 Narxi: $${product.price}`
-          : `📦 ${name}\n💰 Цена: $${product.price}`;
+          ? `📦 ${name}\n💰 Narxi: $${product.price}\n📦 Omborda: ${product.stockQuantity || 0} dona`
+          : `📦 ${name}\n💰 Цена: $${product.price}\n📦 На складе: ${product.stockQuantity || 0} шт`;
 
         const keyboard = {
           inline_keyboard: [
@@ -835,15 +871,52 @@ class TelegramBotService {
   private async handleOperatorRequest(chatId: number, language: "uz" | "ru") {
     if (!this.bot) return;
 
-    // Get operator phone from bot settings
+    // Get operator phone and telegram username from bot settings
     const settings = await storage.getBotSettings();
     const operatorPhone = settings?.operatorPhone || "+998 90 123 45 67";
+    const telegramUsername = settings?.telegramBotUsername || "@akramjon0011";
     
     const operatorMessage = language === "uz"
-      ? `👤 Operator bilan bog'lanish uchun telefon qiling: ${operatorPhone}\n\nYoki @shop_support ga yozing. Tez orada javob beramiz!`
-      : `👤 Для связи с оператором звоните: ${operatorPhone}\n\nИли пишите @shop_support. Ответим как можно скорее!`;
+      ? `👤 Operator bilan bog'lanish uchun telefon qiling: ${operatorPhone}\n\nYoki ${telegramUsername} ga yozing. Tez orada javob beramiz!`
+      : `👤 Для связи с оператором звоните: ${operatorPhone}\n\nИли пишите ${telegramUsername}. Ответим как можно скорее!`;
     
     await this.bot.sendMessage(chatId, operatorMessage);
+  }
+
+  private async handleClearCart(chatId: number, userId: string, language: "uz" | "ru") {
+    if (!this.bot) return;
+
+    try {
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) return;
+
+      const orders = await storage.getOrdersByUser(user.id);
+      const pendingOrders = orders.filter(order => order.orderStatus === "pending");
+
+      for (const order of pendingOrders) {
+        await storage.deleteOrder(order.id);
+      }
+
+      const message = language === "uz" 
+        ? "✅ Savat tozalandi! Katalogdan yangi mahsulotlar tanlashingiz mumkin."
+        : "✅ Корзина очищена! Вы можете выбрать новые товары из каталога.";
+
+      const keyboard = {
+        inline_keyboard: [
+          [{ text: language === "uz" ? "📦 Katalog" : "📦 Каталог", callback_data: "catalog" }],
+          [{ text: language === "uz" ? "🏠 Asosiy menyu" : "🏠 Главное меню", callback_data: "main_menu" }]
+        ]
+      };
+
+      await this.bot.sendMessage(chatId, message, { reply_markup: keyboard });
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+      const errorMessage = language === "uz"
+        ? "Savatni tozalashda xatolik yuz berdi."
+        : "Ошибка при очистке корзины.";
+      
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
   }
 
   private async handleProductOrder(chatId: number, userId: string, productId: string, language: "uz" | "ru") {

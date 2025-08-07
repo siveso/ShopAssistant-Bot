@@ -36,6 +36,7 @@ export interface IStorage {
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrderStatus(id: string, status: "pending" | "processing" | "completed" | "cancelled"): Promise<Order | undefined>;
   updateOrder(id: string, insertOrder: Partial<InsertOrder>): Promise<Order | undefined>;
+  deleteOrder(id: string): Promise<void>;
 
   // Conversations
   getConversation(userId: string, platformType: "telegram" | "instagram"): Promise<Conversation | undefined>;
@@ -176,6 +177,10 @@ export class DatabaseStorage implements IStorage {
   async updateOrder(id: string, insertOrder: Partial<InsertOrder>): Promise<Order | undefined> {
     const [order] = await db.update(orders).set(insertOrder).where(eq(orders.id, id)).returning();
     return order || undefined;
+  }
+
+  async deleteOrder(id: string): Promise<void> {
+    await db.delete(orders).where(eq(orders.id, id));
   }
 
   // Conversations
