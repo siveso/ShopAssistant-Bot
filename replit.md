@@ -2,9 +2,9 @@
 
 ## Overview
 
-Sales Assistant is a comprehensive e-commerce chatbot system designed to serve online store customers in both Uzbek and Russian languages. The application consists of a hybrid chatbot that integrates rule-based responses with AI-powered natural language processing, alongside a React-based admin dashboard for managing products, orders, users, and bot configurations.
+Sales Assistant is a comprehensive e-commerce platform combining a multilingual chatbot system, public-facing website, and admin management interface. The system serves online store customers in both Uzbek and Russian languages through multiple channels: Telegram bot for direct customer interaction, a public website catalog for product browsing, and a React-based admin dashboard for comprehensive business management.
 
-The system is built to support multiple messaging platforms (Telegram and Instagram Direct) while maintaining a centralized management interface. The chatbot can handle product inquiries, process orders, provide customer support, and engage customers in their preferred language.
+The platform integrates rule-based responses with AI-powered natural language processing for the chatbot, while providing a modern web presence for customers to browse and learn about products. The system supports multiple messaging platforms (Telegram and Instagram Direct) while maintaining centralized management through the admin interface.
 
 **Bot Contact Information:**
 - Telegram Bot: @akramjon0011 (https://t.me/akramjon0011)
@@ -35,7 +35,9 @@ Migration Status: ✅ Successfully completed migration from Replit Agent to Repl
 - **Frontend**: React with TanStack Query for state management
 - **Telegram Bot**: Successfully integrated and running
 - **AI Integration**: Google Gemini API configured for natural language processing
-- **Status**: Production ready with all core features operational
+- **Public Website**: Complete customer-facing website with product catalog and multilingual support
+- **Admin Panel**: Separate authenticated admin interface for managing products, orders, and bot settings
+- **Status**: Production ready with all core features operational including public website
 
 ### Recent Fixes (January 2025)
 - **Product Validation**: Fixed price and quantity validation using z.coerce for automatic string-to-number conversion
@@ -48,6 +50,10 @@ Migration Status: ✅ Successfully completed migration from Replit Agent to Repl
 - **Product Catalog**: 8 active products (Samsung Galaxy S24, iPhone 15 Pro, MacBook Air M3, etc.) for testing
 - **Flexible Quantity Input**: Users can now input any quantity (1-10,000) via text message instead of limited buttons
 - **Enhanced UX**: Quick quantity buttons (1, 5, 10, 50, 100, 500) plus custom number input support
+- **Public Website Catalog**: ✅ Complete public-facing website with product catalog, detail pages, and multilingual support (January 8, 2025)
+- **Website Features**: Home page, product catalog with search/filter, individual product pages, about page, multilingual (Uzbek/Russian)
+- **Navigation**: Separated admin panel (/admin) from public website (/) with proper routing and authentication
+- **Security Enhancement**: Removed login credentials from public-facing pages for improved security
 
 ## System Architecture
 

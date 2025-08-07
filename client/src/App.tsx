@@ -19,6 +19,10 @@ import Marketing from "@/pages/marketing";
 import Logout from "@/pages/logout";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
+import Catalog from "@/pages/catalog";
+import ProductDetail from "@/pages/product-detail";
+import About from "@/pages/about";
+import Home from "@/pages/home";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 
@@ -36,24 +40,35 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
+  // Public routes (accessible without authentication)
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/products" component={Products} />
-      <Route path="/orders" component={Orders} />
-      <Route path="/users" component={Users} />
-      <Route path="/conversations" component={Conversations} />
-      <Route path="/bot-settings" component={BotSettings} />
-      <Route path="/translations" component={Translations} />
-      <Route path="/categories" component={Categories} />
-      <Route path="/reports" component={Reports} />
-      <Route path="/help" component={Help} />
-      <Route path="/marketing" component={Marketing} />
-      <Route path="/logout" component={Logout} />
+      <Route path="/catalog" component={Catalog} />
+      <Route path="/product/:id" component={ProductDetail} />
+      <Route path="/about" component={About} />
+      <Route path="/home" component={Home} />
+      <Route path="/login" component={Login} />
+      {isAuthenticated ? (
+        <>
+          <Route path="/admin" component={Dashboard} />
+          <Route path="/products" component={Products} />
+          <Route path="/orders" component={Orders} />
+          <Route path="/users" component={Users} />
+          <Route path="/conversations" component={Conversations} />
+          <Route path="/bot-settings" component={BotSettings} />
+          <Route path="/translations" component={Translations} />
+          <Route path="/categories" component={Categories} />
+          <Route path="/reports" component={Reports} />
+          <Route path="/help" component={Help} />
+          <Route path="/marketing" component={Marketing} />
+          <Route path="/logout" component={Logout} />
+        </>
+      ) : (
+        <>
+          <Route path="/admin" component={Login} />
+          <Route path="/" component={Home} />
+        </>
+      )}
       <Route component={NotFound} />
     </Switch>
   );
@@ -62,7 +77,19 @@ function Router() {
 function AppLayout() {
   const { isAuthenticated } = useAuth();
   
-  if (!isAuthenticated) {
+  // Check if current route is a public route
+  const isPublicRoute = window.location.pathname === '/' ||
+                       window.location.pathname.startsWith('/catalog') || 
+                       window.location.pathname.startsWith('/product/') ||
+                       window.location.pathname === '/about' ||
+                       window.location.pathname === '/home' ||
+                       window.location.pathname === '/login';
+  
+  if (!isAuthenticated && !isPublicRoute) {
+    return <Router />;
+  }
+  
+  if (isPublicRoute) {
     return <Router />;
   }
   
