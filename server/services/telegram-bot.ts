@@ -127,6 +127,10 @@ class TelegramBotService {
         else if (query.data === 'operator') {
           await this.handleOperatorRequest(chatId, language);
         }
+        else if (query.data.startsWith('product_')) {
+          const productId = query.data.split('_')[1];
+          await this.handleProductDetails(chatId, productId, language);
+        }
         else if (query.data.startsWith('order_')) {
           const productId = query.data.split('_')[1];
           await this.handleProductOrder(chatId, userId, productId, language);
@@ -397,29 +401,24 @@ class TelegramBotService {
       
       await this.bot.sendMessage(chatId, catalogMessage);
       
-      // Show first 5 products
+      // Show first 5 products with simplified info
       for (const product of products.slice(0, 5)) {
         const name = language === "uz" ? product.nameUz : product.nameRu;
-        const description = language === "uz" ? product.descriptionUz : product.descriptionRu;
-        
-        // Truncate description if it's too long to avoid telegram caption limit (1024 chars)
-        const truncatedDescription = description && description.length > 300 ? 
-          description.substring(0, 300) + "..." : description;
         
         const productMessage = language === "uz" 
-          ? `📦 ${name}\n💰 Narxi: $${product.price}${truncatedDescription ? '\n📝 ' + truncatedDescription : ''}\n📦 Omborda: ${product.stockQuantity || 0} dona`
-          : `📦 ${name}\n💰 Цена: $${product.price}${truncatedDescription ? '\n📝 ' + truncatedDescription : ''}\n📦 На складе: ${product.stockQuantity || 0} шт`;
+          ? `📦 ${name}\n💰 Narxi: $${product.price}`
+          : `📦 ${name}\n💰 Цена: $${product.price}`;
 
         const keyboard = {
           inline_keyboard: [
             [{ 
-              text: language === "uz" ? "Buyurtma berish" : "Заказать", 
-              callback_data: `order_${product.id}` 
+              text: language === "uz" ? "📋 Batafsil" : "📋 Подробнее", 
+              callback_data: `product_${product.id}` 
             }]
           ]
         };
 
-        // Send photo if available, otherwise send text message
+        // Send with small image if available
         if (product.imageUrl) {
           try {
             await this.bot.sendPhoto(chatId, product.imageUrl, {
@@ -428,7 +427,6 @@ class TelegramBotService {
             });
           } catch (error) {
             console.error(`Error sending photo for product ${product.id}:`, error);
-            // Fallback to text message if photo fails
             await this.bot.sendMessage(chatId, productMessage, { reply_markup: keyboard });
           }
         } else {
@@ -440,6 +438,63 @@ class TelegramBotService {
       const errorMessage = language === "uz"
         ? "Katalogni yuklashda xatolik yuz berdi."
         : "Ошибка при загрузке каталога.";
+      
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
+  private async handleProductDetails(chatId: number, productId: string, language: "uz" | "ru") {
+    if (!this.bot) return;
+
+    try {
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        const message = language === "uz" 
+          ? "Kechirasiz, mahsulot topilmadi."
+          : "Извините, товар не найден.";
+        await this.bot.sendMessage(chatId, message);
+        return;
+      }
+
+      const name = language === "uz" ? product.nameUz : product.nameRu;
+      const description = language === "uz" ? product.descriptionUz : product.descriptionRu;
+      
+      const productMessage = language === "uz" 
+        ? `📦 ${name}\n\n📝 Ta'rif:\n${description || "Ta'rif mavjud emas"}\n\n💰 Narxi: $${product.price}\n📦 Omborda: ${product.stockQuantity || 0} dona\n📂 Kategoriya: ${product.category || "Umumiy"}`
+        : `📦 ${name}\n\n📝 Описание:\n${description || "Описание не доступно"}\n\n💰 Цена: $${product.price}\n📦 На складе: ${product.stockQuantity || 0} шт\n📂 Категория: ${product.category || "Общая"}`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [{ 
+            text: language === "uz" ? "🛒 Buyurtma berish" : "🛒 Заказать", 
+            callback_data: `order_${product.id}` 
+          }],
+          [{ 
+            text: language === "uz" ? "⬅️ Katalogga qaytish" : "⬅️ Вернуться в каталог", 
+            callback_data: "catalog" 
+          }]
+        ]
+      };
+
+      if (product.imageUrl) {
+        try {
+          await this.bot.sendPhoto(chatId, product.imageUrl, {
+            caption: productMessage,
+            reply_markup: keyboard
+          });
+        } catch (error) {
+          console.error(`Error sending product details photo ${product.id}:`, error);
+          await this.bot.sendMessage(chatId, productMessage, { reply_markup: keyboard });
+        }
+      } else {
+        await this.bot.sendMessage(chatId, productMessage, { reply_markup: keyboard });
+      }
+    } catch (error) {
+      console.error("Error handling product details:", error);
+      const errorMessage = language === "uz"
+        ? "Mahsulot ma'lumotlarini yuklashda xatolik yuz berdi."
+        : "Ошибка при загрузке информации о товаре.";
       
       await this.bot.sendMessage(chatId, errorMessage);
     }
