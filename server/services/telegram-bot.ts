@@ -590,7 +590,7 @@ class TelegramBotService {
         userId: user.id,
         productId,
         quantity: 1,
-        totalPrice: product.price
+        totalPrice: parseFloat(product.price.toString())
       });
 
       const name = language === "uz" ? product.nameUz : product.nameRu;

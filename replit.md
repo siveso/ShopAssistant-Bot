@@ -29,6 +29,12 @@ Migration Status: Successfully completed migration from Replit Agent to Replit e
 - **AI Integration**: Google Gemini API configured for natural language processing
 - **Status**: Production ready with all core features operational
 
+### Recent Fixes (January 2025)
+- **Product Validation**: Fixed price and quantity validation using z.coerce for automatic string-to-number conversion
+- **Telegram Bot Real-time Updates**: Bot now fetches fresh product data from database on each request
+- **API Endpoints**: All CRUD operations working correctly with proper validation
+- **Data Consistency**: Admin panel changes are immediately reflected in Telegram bot responses
+
 ## System Architecture
 
 ### Frontend Architecture
