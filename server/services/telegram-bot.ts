@@ -1,7 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import { storage } from "../storage";
 import { generateChatbotResponse, analyzeUserIntent, type ChatContext } from "./gemini";
-import { loadBotResponses, loadFAQ } from "../config/bot-responses.json";
+import botResponsesData from "../config/bot-responses.json";
 
 class TelegramBotService {
   private bot: TelegramBot | null = null;
@@ -171,22 +171,14 @@ class TelegramBotService {
   private async loadRuleResponses(language: "uz" | "ru"): Promise<Record<string, string>> {
     try {
       const settings = await storage.getBotSettings();
-      const responses = settings?.ruleBasedResponses as any;
+      const responses = settings?.ruleBasedResponses as Record<string, Record<string, string>> || {};
       
       if (responses && responses[language]) {
         return responses[language];
       }
       
-      // Fallback to default responses
-      return language === "uz" ? {
-        "yetkazib berish": "Yetkazib berish Toshkent bo'ylab bepul. Tashqarida 10,000 so'm.",
-        "kontakt": "Telefon: +998 90 123 45 67\nTelegram: @shop_support",
-        "aksiya": "Hozirda 20% chegirma barcha telefonlarga!"
-      } : {
-        "доставка": "Доставка по Ташкенту бесплатно. За городом 10,000 сум.",
-        "контакт": "Телефон: +998 90 123 45 67\nTelegram: @shop_support",
-        "акция": "Сейчас скидка 20% на все телефоны!"
-      };
+      // Fallback to default responses from imported JSON
+      return (botResponsesData as any)[language] || {};
     } catch (error) {
       console.error("Error loading rule responses:", error);
       return {};
@@ -202,7 +194,7 @@ class TelegramBotService {
     if (!this.bot) return;
 
     try {
-      let products = [];
+      let products: any[] = [];
       
       if (entities?.productName) {
         products = await storage.searchProducts(entities.productName, language);
@@ -283,7 +275,7 @@ class TelegramBotService {
     try {
       // Get conversation history
       const conversation = await storage.getConversation(userId, "telegram");
-      const conversationHistory = conversation?.messages || [];
+      const conversationHistory = (conversation?.messages as Array<{role: "user" | "assistant"; content: string}>) || [];
 
       // Get user info
       const user = await storage.getUserByPlatformId(userId, "telegram");
@@ -292,8 +284,8 @@ class TelegramBotService {
         userLanguage: language,
         conversationHistory,
         userInfo: {
-          name: user?.fullName,
-          phone: user?.phoneNumber
+          name: user?.fullName || undefined,
+          phone: user?.phoneNumber || undefined
         }
       };
 
@@ -301,7 +293,7 @@ class TelegramBotService {
       await this.bot.sendMessage(chatId, response);
 
       // Update conversation history
-      const newMessages = [
+      const newMessages: Array<{role: "user" | "assistant"; content: string}> = [
         ...conversationHistory.slice(-10), // Keep last 10 messages
         { role: "user" as const, content: message },
         { role: "assistant" as const, content: response }
