@@ -9,6 +9,7 @@ The system is built to support multiple messaging platforms (Telegram and Instag
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+User preferred language: Uzbek (o'zbek tili)
 
 ## System Architecture
 
