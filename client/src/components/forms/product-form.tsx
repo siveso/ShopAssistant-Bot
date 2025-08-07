@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { insertProductSchema } from "@shared/schema";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -7,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
+import type { Category } from "@shared/schema";
 
 const productFormSchema = insertProductSchema.extend({
   price: z.string().min(1, "Price is required"),
@@ -23,6 +26,12 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ onSubmit, isLoading, defaultValues, initialData }: ProductFormProps) {
+  // Load categories from API
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["/api/categories"],
+    queryFn: () => apiRequest("/api/categories"),
+  });
+
   // Convert initialData to form format
   const formDefaults = initialData ? {
     nameUz: initialData.nameUz || "",
@@ -157,12 +166,17 @@ export function ProductForm({ onSubmit, isLoading, defaultValues, initialData }:
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="electronics">Elektronika</SelectItem>
-                  <SelectItem value="clothing">Kiyim</SelectItem>
-                  <SelectItem value="home-garden">Uy va Bog'</SelectItem>
-                  <SelectItem value="sports-outdoors">Sport va Dam Olish</SelectItem>
-                  <SelectItem value="books">Kitoblar</SelectItem>
-                  <SelectItem value="toys">O'yinchoqlar</SelectItem>
+                  {categoriesLoading ? (
+                    <SelectItem value="" disabled>Kategoriyalar yuklanmoqda...</SelectItem>
+                  ) : categories && categories.length > 0 ? (
+                    categories.map((category: Category) => (
+                      <SelectItem key={category.id} value={category.nameUz}>
+                        {category.nameUz} ({category.nameRu})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>Kategoriyalar mavjud emas</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
