@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, ShoppingCart, Star, Truck, Shield, Headphones } from "lucide-react";
 import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { useCart } from "@/hooks/useCart";
+import { useSEO } from "@/hooks/useSEO";
 
 interface Product {
   id: string;
@@ -27,6 +28,9 @@ export default function ProductDetail() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  
+  // SEO optimization
+  useSEO('product', params?.id, language);
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: [`/api/products/${params?.id}`],

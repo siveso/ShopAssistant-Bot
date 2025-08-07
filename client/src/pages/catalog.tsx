@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ShoppingCart, Search, Filter, Star } from "lucide-react";
 import { CartSidebar } from "@/components/cart/cart-sidebar";
 import { useCart } from "@/hooks/useCart";
+import { useSEO } from "@/hooks/useSEO";
 
 interface Product {
   id: string;
@@ -28,6 +29,9 @@ export default function Catalog() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const { addToCart } = useCart();
+  
+  // SEO optimization
+  useSEO('catalog', undefined, language);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["/api/products"],

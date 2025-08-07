@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,30 @@ import { CartSidebar } from "@/components/cart/cart-sidebar";
 
 export default function Home() {
   const [language, setLanguage] = useState<"uz" | "ru">("uz");
+
+  // Set basic SEO for home page
+  useEffect(() => {
+    const title = language === "uz" 
+      ? "Bizning Do'kon - Sifatli Elektronika Mahsulotlari" 
+      : "Наш Магазин - Качественные Электронные Товары";
+    
+    const description = language === "uz"
+      ? "Bizning do'kondan eng yangi va sifatli elektronika mahsulotlarini sotib oling. Samsung, Apple, va boshqa mashhur brendlar. Tez yetkazib berish va kafolat."
+      : "Покупайте самые новые и качественные электронные товары в нашем магазине. Samsung, Apple и другие известные бренды. Быстрая доставка и гарантия.";
+
+    document.title = title;
+    
+    // Update meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', description);
+    } else {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      metaDescription.setAttribute('content', description);
+      document.head.appendChild(metaDescription);
+    }
+  }, [language]);
   
   const getText = (uz: string, ru: string) => language === "uz" ? uz : ru;
 

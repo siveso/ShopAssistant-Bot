@@ -483,6 +483,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SEO Routes (Public)
+  const { seoService } = await import("./services/seo-service.js");
+
+  app.get("/api/seo/product/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { lang = 'uz' } = req.query;
+      
+      const product = await storage.getProduct(id);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+
+      const seoData = await seoService.generateProductSEO({
+        nameUz: product.nameUz,
+        nameRu: product.nameRu,
+        descriptionUz: product.descriptionUz || undefined,
+        descriptionRu: product.descriptionRu || undefined,
+        price: product.price,
+        category: product.category || undefined,
+        features: []
+      }, lang as 'uz' | 'ru');
+
+      res.json(seoData);
+    } catch (error) {
+      console.error("Error getting product SEO:", error);
+      res.status(500).json({ error: "Failed to generate SEO data" });
+    }
+  });
+
+  app.get("/api/seo/catalog", async (req, res) => {
+    try {
+      const { lang = 'uz' } = req.query;
+      
+      const seoData = await seoService.generateCatalogSEO(lang as 'uz' | 'ru');
+      res.json(seoData);
+    } catch (error) {
+      console.error("Error getting catalog SEO:", error);
+      res.status(500).json({ error: "Failed to generate catalog SEO data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
