@@ -1,0 +1,67 @@
+Loyiha Nomi: Savdo Yordamchisi
+
+Loyiha Maqsadi: Onlayn do'kon xaridorlari uchun professional, ko'p tilli (o'zbek/rus) sun'iy intellektga asoslangan chatbot yaratish. Chatbotning asosiy vazifasi Telegram va Instagram Direct platformalarida mahsulotlar haqida ma'lumot berish, savollarga javob berish va buyurtmalarni qabul qilishdan iborat.
+
+1. Platformalar va Integratsiya:
+
+Asosiy platformalar: Telegram va Instagram Direct.
+
+Arxitektura talabi: Asosiy chatbot mantiqini (core logic) alohida dastur sifatida yarating. Bu dasturga Telegram Bot API va Instagram Graph API (Direct xabarlari uchun) orqali ulanish uchun alohida modullar (connectors) yozilishi kerak. Bu kelajakda boshqa platformalarni qo'shishni osonlashtiradi.
+
+2. Til Sozlamalari:
+
+Chatbot ikki tilni qo'llab-quvvatlashi kerak: O'zbek tili (Lotin yozuvi) va Rus tili.
+
+Foydalanuvchi bilan birinchi muloqot boshida, unga qulay tilni tanlashi uchun tugmalar ("O'zbekcha", "Русский") yordamida so'rov yuborilishi kerak. Foydalanuvchining tanlovi ma'lumotlar bazasida saqlanishi lozim.
+
+3. Suhbat Mantig'i va Texnologiyalar:
+
+Gibrid Model: Chatbot Qat'iy qoidalar (Rule-Based) va Sun'iy intellekt (AI-Based) gibrid modeli asosida ishlashi kerak.
+
+Qoidalar Asosida (Rule-Based): "Yetkazib berish", "Kontaktlar", "Aksiya" kabi aniq kalit so'zlar uchun oldindan tayyorlangan javoblarni (matn, rasm) yuborishi kerak. Bu javoblar alohida konfiguratsiya faylida (masalan, JSON) saqlanishi lozim.
+
+Sun'iy Intellekt Asosida (AI-Based):
+
+Foydalanuvchining erkin shakldagi barcha boshqa savollari (masalan, "shu ko'ylakning moviy rangi bormi?", "qaysi telefon yaxshiroq?") uchun Gemini 1.5 Flash API'sidan foydalanilsin.
+
+Gemini API'ga yuboriladigan so'rov (prompt) suhbat kontekstini, foydalanuvchi tilini va kerak bo'lsa, ma'lumotlar bazasidan olingan mahsulot ma'lumotlarini o'z ichiga olishi kerak.
+
+Muloqot Uslubi: Barcha javoblar, ham qoidaviy, ham AI tomonidan yaratilgan, rasmiy va professional ohangda bo'lishi shart.
+
+4. Bilimlar Bazasi va Ma'lumotlar Tuzilmasi:
+
+Statik Bilimlar Bazasi: Yuqorida aytilgan qoidaviy javoblar uchun faq_uz.txt, faq_ru.txt kabi hujjatlardan yoki JSON fayldan foydalanilsin.
+
+Dinamik Bilimlar Bazasi (Database):
+
+Loyihada ma'lumotlar bazasi (masalan, PostgreSQL yoki SQLite) o'rnatilishi va ulanishi kerak.
+
+Jadvallar (Tables):
+
+Products: id, name_uz, name_ru, description_uz, description_ru, price, stock_quantity, image_url, category.
+
+Users: id, platform_id (Telegram yoki Instagram ID), platform_type ('telegram'/'instagram'), full_name, phone_number, language_code.
+
+Orders: id, user_id, product_id, quantity, order_status, created_at.
+
+5. Asosiy Funksional Oqimlar (Key Functional Flows):
+
+Mahsulot haqida ma'lumot berish: Foydalanuvchi mahsulot so'raganda, bot ma'lumotlar bazasidan uning nomi, tavsifi, narxi va rasmini (image_url) olib, foydalanuvchiga yuboradi.
+
+Buyurtma qabul qilish:
+
+Foydalanuvchi "Buyurtma berish" tugmasini bosadi yoki shunday yozadi.
+
+Bot undan kerakli mahsulotni va sonini so'raydi.
+
+Agar foydalanuvchi ma'lumotlari (ism, telefon) bazada bo'lmasa, bot ularni so'raydi va Users jadvaliga saqlaydi.
+
+Yakuniy ma'lumotlar (mahsulot, soni, narx, mijoz) Orders jadvaliga yoziladi.
+
+Foydalanuvchiga buyurtma qabul qilingani haqida tasdiq xabari yuboriladi.
+
+Tugmalardan foydalanish (Buttons): Asosiy menyu ("Katalog", "Savatcha", "Biz bilan aloqa") va tez-tez beriladigan savollar uchun tugmalar ishlatilsin. Bu foydalanuvchi uchun qulaylik yaratadi.
+
+Rasmlar/Videolar yuborish: Mahsulotlarni namoyish qilish uchun ma'lumotlar bazasidan olingan image_url yordamida rasm yuborish imkoniyati bo'lsin.
+
+"Jonli operatorga ulash": Foydalanuvchi shu nomli tugmani bossa, bot avtomatik javob berishni to'xtatadi va mas'ul xodimga (masalan, alohida Telegram guruhiga) mijoz ma'lumotlari va suhbat tarixi bilan birga xabar yuboradi. Foydalanuvchiga esa "Tez orada operatorimiz siz bilan bog'lanadi" degan javob ko'rsatiladi.
