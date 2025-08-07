@@ -518,9 +518,15 @@ class TelegramBotService {
   private async handleContactRequest(chatId: number, language: "uz" | "ru") {
     if (!this.bot) return;
 
+    // Get contact info from bot settings
+    const settings = await storage.getBotSettings();
+    const contactInfo = settings?.contactInfo || "+998 90 123 45 67";
+    const workingHours = settings?.workingHours || "9:00-19:00 (dushanba-shanba)";
+    const companyAddress = settings?.companyAddress || "Toshkent shahar";
+    
     const contactMessage = language === "uz" 
-      ? "📞 Biz bilan bog'lanish:\n\n• Telefon: +998 90 123 45 67\n• Telegram: @shop_support\n• Ish vaqti: 9:00-19:00 (dushanba-shanba)\n• Manzil: Toshkent shahar, Amir Temur ko'chasi"
-      : "📞 Связь с нами:\n\n• Телефон: +998 90 123 45 67\n• Telegram: @shop_support\n• Время работы: 9:00-19:00 (пн-сб)\n• Адрес: г. Ташкент, ул. Амира Темура";
+      ? `📞 Biz bilan bog'lanish:\n\n• Telefon: ${contactInfo}\n• Telegram: @shop_support\n• Ish vaqti: ${workingHours}\n• Manzil: ${companyAddress}`
+      : `📞 Связь с нами:\n\n• Телефон: ${contactInfo}\n• Telegram: @shop_support\n• Время работы: ${workingHours}\n• Адрес: ${companyAddress}`;
     
     const keyboard = {
       reply_markup: {
@@ -537,9 +543,13 @@ class TelegramBotService {
   private async handleOperatorRequest(chatId: number, language: "uz" | "ru") {
     if (!this.bot) return;
 
+    // Get operator phone from bot settings
+    const settings = await storage.getBotSettings();
+    const operatorPhone = settings?.operatorPhone || "+998 90 123 45 67";
+    
     const operatorMessage = language === "uz"
-      ? "👤 Operator bilan bog'lanish uchun telefon qiling: +998 90 123 45 67\n\nYoki @shop_support ga yozing. Tez orada javob beramiz!"
-      : "👤 Для связи с оператором звоните: +998 90 123 45 67\n\nИли пишите @shop_support. Ответим как можно скорее!";
+      ? `👤 Operator bilan bog'lanish uchun telefon qiling: ${operatorPhone}\n\nYoki @shop_support ga yozing. Tez orada javob beramiz!`
+      : `👤 Для связи с оператором звоните: ${operatorPhone}\n\nИли пишите @shop_support. Ответим как можно скорее!`;
     
     await this.bot.sendMessage(chatId, operatorMessage);
   }
@@ -665,9 +675,13 @@ class TelegramBotService {
         await storage.updateOrderStatus(order.id, "processing");
       }
 
+      // Get operator phone from settings for confirmation
+      const settings = await storage.getBotSettings();
+      const operatorPhone = settings?.operatorPhone || "+998 90 123 45 67";
+      
       const confirmMessage = language === "uz"
-        ? `✅ Buyurtmangiz tasdiqlandi!\n📦 ${pendingOrders.length} ta mahsulot\n\nTez orada operatorimiz siz bilan bog'lanadi.\nTelefon: +998 90 123 45 67`
-        : `✅ Ваш заказ подтвержден!\n📦 ${pendingOrders.length} товаров\n\nВскоре с вами свяжется оператор.\nТелефон: +998 90 123 45 67`;
+        ? `✅ Buyurtmangiz tasdiqlandi!\n📦 ${pendingOrders.length} ta mahsulot\n\nTez orada operatorimiz siz bilan bog'lanadi.\nTelefon: ${operatorPhone}`
+        : `✅ Ваш заказ подтвержден!\n📦 ${pendingOrders.length} товаров\n\nВскоре с вами свяжется оператор.\nТелефон: ${operatorPhone}`;
 
       await this.bot.sendMessage(chatId, confirmMessage);
     } catch (error) {

@@ -81,6 +81,9 @@ export const botSettings = pgTable("bot_settings", {
   workingHours: text("working_hours"),
   website: text("website"),
   email: text("email"),
+  // Contact Information
+  contactInfo: text("contact_info"),
+  operatorPhone: text("operator_phone"),
   // Settings
   isActive: boolean("is_active").default(true),
   ruleBasedResponses: jsonb("rule_based_responses").default({}),
