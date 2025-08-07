@@ -167,7 +167,7 @@ export function ProductForm({ onSubmit, isLoading, defaultValues, initialData }:
                 </FormControl>
                 <SelectContent>
                   {categoriesLoading ? (
-                    <SelectItem value="" disabled>Kategoriyalar yuklanmoqda...</SelectItem>
+                    <SelectItem value="loading" disabled>Kategoriyalar yuklanmoqda...</SelectItem>
                   ) : categories && categories.length > 0 ? (
                     categories.map((category: Category) => (
                       <SelectItem key={category.id} value={category.nameUz}>
@@ -175,7 +175,7 @@ export function ProductForm({ onSubmit, isLoading, defaultValues, initialData }:
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>Kategoriyalar mavjud emas</SelectItem>
+                    <SelectItem value="no-categories" disabled>Kategoriyalar mavjud emas</SelectItem>
                   )}
                 </SelectContent>
               </Select>
