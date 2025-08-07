@@ -141,9 +141,9 @@ export default function Login() {
           </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Demo ma'lumotlar:</p>
-            <p>Username: <code className="bg-gray-100 px-2 py-1 rounded">admin</code></p>
-            <p>Parol: <code className="bg-gray-100 px-2 py-1 rounded">admin123</code></p>
+            <p>Login ma'lumotlar:</p>
+            <p>Username: <code className="bg-gray-100 px-2 py-1 rounded">Akramjon001</code></p>
+            <p>Parol: <code className="bg-gray-100 px-2 py-1 rounded">Hisobot201415</code></p>
             
             <button 
               onClick={() => {

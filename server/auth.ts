@@ -98,16 +98,16 @@ export class AuthService {
   // Create default admin user if not exists
   static async createDefaultAdmin(): Promise<void> {
     try {
-      const existingAdmin = await storage.getAdminByUsername("admin");
+      const existingAdmin = await storage.getAdminByUsername("Akramjon001");
       if (!existingAdmin) {
-        const hashedPassword = await this.hashPassword("admin123");
+        const hashedPassword = await this.hashPassword("Hisobot201415");
         await storage.createAdminUser({
-          username: "admin",
+          username: "Akramjon001",
           password: hashedPassword,
-          fullName: "Administrator",
+          fullName: "Akramjon Admin",
           role: "admin"
         });
-        console.log("Default admin user created: username=admin, password=admin123");
+        console.log("Default admin user created: username=Akramjon001");
       }
     } catch (error) {
       console.error("Error creating default admin:", error);
