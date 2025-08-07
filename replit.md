@@ -6,6 +6,10 @@ Sales Assistant is a comprehensive e-commerce chatbot system designed to serve o
 
 The system is built to support multiple messaging platforms (Telegram and Instagram Direct) while maintaining a centralized management interface. The chatbot can handle product inquiries, process orders, provide customer support, and engage customers in their preferred language.
 
+**Bot Contact Information:**
+- Telegram Bot: @akramjon0011 (https://t.me/akramjon0011)
+- Admin Login: Akramjon001 / Hisobot201415
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -34,6 +38,10 @@ Migration Status: Successfully completed migration from Replit Agent to Replit e
 - **Telegram Bot Real-time Updates**: Bot now fetches fresh product data from database on each request
 - **API Endpoints**: All CRUD operations working correctly with proper validation
 - **Data Consistency**: Admin panel changes are immediately reflected in Telegram bot responses
+- **E-commerce Bot Complete**: Full shopping cart system with quantity selection, checkout process, and order management
+- **Admin Authentication**: Working login system with bcrypt password hashing
+- **Bot Stability**: Fixed 409 conflicts and improved polling mechanism with proper cleanup
+- **Product Catalog**: 8 active products (Samsung Galaxy S24, iPhone 15 Pro, MacBook Air M3, etc.) for testing
 
 ## System Architecture
 

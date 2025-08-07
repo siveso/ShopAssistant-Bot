@@ -20,13 +20,18 @@ class TelegramBotService {
 
   async initialize() {
     try {
-      // Stop existing bot if running
+      // Completely stop and cleanup existing bot
       if (this.bot) {
         try {
           await this.bot.stopPolling();
+          this.bot.removeAllListeners();
           this.bot = null;
+          this.isActive = false;
+          console.log("Previous bot instance completely stopped");
+          // Wait a bit for cleanup
+          await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (e) {
-          console.log("Previous bot instance stopped");
+          console.log("Bot cleanup completed");
         }
       }
 
@@ -37,24 +42,26 @@ class TelegramBotService {
         throw new Error("Telegram bot token not found");
       }
 
+      console.log("Creating new bot instance...");
       this.bot = new TelegramBot(token, { 
         polling: {
-          interval: 2000,
+          interval: 3000,
           autoStart: false,
           params: {
-            timeout: 10
+            timeout: 20,
+            allowed_updates: ["message", "callback_query"]
           }
         }
       });
       
       this.setupEventHandlers();
       
-      // Start polling with error handling
+      // Start polling with proper error handling
       try {
-        await this.bot.startPolling({
-          restart: true
-        });
+        console.log("Starting bot polling...");
+        await this.bot.startPolling();
         this.isActive = true;
+        console.log("Bot polling started successfully");
       } catch (error) {
         console.error("Polling start error:", error);
         this.isActive = false;
