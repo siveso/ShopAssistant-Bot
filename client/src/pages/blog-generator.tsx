@@ -16,7 +16,7 @@ export default function BlogGenerator() {
     refetchInterval: 5000, // Har 5 soniyada yangilash
   });
 
-  // Manual blog generation
+  // RSS blog generation
   const generateMutation = useMutation({
     mutationFn: () => apiRequest("/api/blog-generator/generate", {
       method: "POST",
@@ -27,13 +27,53 @@ export default function BlogGenerator() {
     },
     onError: (error) => {
       setIsGenerating(false);
-      console.error("Blog generation failed:", error);
+      console.error("RSS blog generation failed:", error);
     },
   });
 
-  const handleGenerateNow = () => {
+  // Business content generation
+  const generateBusinessMutation = useMutation({
+    mutationFn: () => apiRequest("/api/blog-generator/generate-business", {
+      method: "POST",
+    }),
+    onSuccess: () => {
+      setIsGenerating(false);
+      refetchStatus();
+    },
+    onError: (error) => {
+      setIsGenerating(false);
+      console.error("Business content generation failed:", error);
+    },
+  });
+
+  // Demo content generation
+  const generateDemoMutation = useMutation({
+    mutationFn: () => apiRequest("/api/blog-generator/demo", {
+      method: "POST",
+    }),
+    onSuccess: () => {
+      setIsGenerating(false);
+      refetchStatus();
+    },
+    onError: (error) => {
+      setIsGenerating(false);
+      console.error("Demo content generation failed:", error);
+    },
+  });
+
+  const handleGenerateRSS = () => {
     setIsGenerating(true);
     generateMutation.mutate();
+  };
+
+  const handleGenerateBusiness = () => {
+    setIsGenerating(true);
+    generateBusinessMutation.mutate();
+  };
+
+  const handleGenerateDemo = () => {
+    setIsGenerating(true);
+    generateDemoMutation.mutate();
   };
 
   return (
@@ -132,60 +172,179 @@ export default function BlogGenerator() {
         </CardContent>
       </Card>
 
-      {/* Manual Generation */}
+      {/* Quick Demo */}
       <Card>
         <CardHeader>
-          <CardTitle>Manual Blog Yaratish</CardTitle>
+          <CardTitle className="flex items-center">
+            <CheckCircle className="h-5 w-5 mr-2" />
+            Demo Maqolalar
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Bu jarayon RSS feedlardan maqolalar olib, ularni o'zbek va rus tillariga tarjima qiladi.
-                Jarayon bir necha daqiqa davom etishi mumkin.
+                Tizimni test qilish uchun tayyor demo maqolalar yaratadi: "AI Biznesda", "E-commerce Platform".
               </AlertDescription>
             </Alert>
 
             <Button 
-              onClick={handleGenerateNow}
-              disabled={isGenerating || generateMutation.isPending}
+              onClick={handleGenerateDemo}
+              disabled={isGenerating || generateDemoMutation.isPending}
               size="lg"
               className="w-full"
+              variant="secondary"
             >
-              {isGenerating || generateMutation.isPending ? (
+              {isGenerating || generateDemoMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Blog yaratilmoqda...
+                  Demo maqolalar yaratilmoqda...
                 </>
               ) : (
                 <>
-                  <Rss className="h-4 w-4 mr-2" />
-                  Hozir Blog Yaratish
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Demo Maqolalar Yaratish
                 </>
               )}
             </Button>
 
-            {generateMutation.isError && (
+            {generateDemoMutation.isError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Blog yaratishda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.
+                  Demo maqolalar yaratishda xatolik yuz berdi.
                 </AlertDescription>
               </Alert>
             )}
 
-            {generateMutation.isSuccess && (
+            {generateDemoMutation.isSuccess && (
               <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Blog yaratish muvaffaqiyatli boshlandi! Yangi maqolalar tez orada paydo bo'ladi.
+                  Demo maqolalar muvaffaqiyatli yaratildi! Blog sahifasiga o'ting.
                 </AlertDescription>
               </Alert>
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Manual Generation */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Rss className="h-5 w-5 mr-2" />
+              RSS Blog Yaratish
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  RSS feedlardan (TechCrunch, BBC, CNN) maqolalar olib, o'zbek va rus tillariga tarjima qiladi.
+                </AlertDescription>
+              </Alert>
+
+              <Button 
+                onClick={handleGenerateRSS}
+                disabled={isGenerating || generateMutation.isPending}
+                size="lg"
+                className="w-full"
+              >
+                {isGenerating || generateMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    RSS Blog yaratilmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Rss className="h-4 w-4 mr-2" />
+                    RSS dan Blog Yaratish
+                  </>
+                )}
+              </Button>
+
+              {generateMutation.isError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    RSS blog yaratishda xatolik yuz berdi.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {generateMutation.isSuccess && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    RSS bloglar muvaffaqiyatli boshlandi!
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Globe className="h-5 w-5 mr-2" />
+              Biznes AI Blog Yaratish
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Biznesda AI, e-commerce, web texnologiyalar mavzularida professional maqolalar yaratadi.
+                </AlertDescription>
+              </Alert>
+
+              <Button 
+                onClick={handleGenerateBusiness}
+                disabled={isGenerating || generateBusinessMutation.isPending}
+                size="lg"
+                className="w-full"
+                variant="outline"
+              >
+                {isGenerating || generateBusinessMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Biznes Blog yaratilmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Globe className="h-4 w-4 mr-2" />
+                    Biznes AI Blog Yaratish
+                  </>
+                )}
+              </Button>
+
+              {generateBusinessMutation.isError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Biznes blog yaratishda xatolik yuz berdi.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {generateBusinessMutation.isSuccess && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Biznes AI maqolalari muvaffaqiyatli boshlandi!
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

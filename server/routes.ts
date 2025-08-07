@@ -610,12 +610,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await blogGenerator.generateBlogContent();
       res.json({ 
         success: true, 
-        message: "Blog content generation started successfully" 
+        message: "RSS blog content generation started successfully" 
       });
     } catch (error) {
       console.error("Blog generation error:", error);
       res.status(500).json({ 
         error: "Failed to generate blog content",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  app.post("/api/blog-generator/generate-business", requireAuth, async (req, res) => {
+    try {
+      const { businessContentGenerator } = await import("./services/business-content-generator");
+      await businessContentGenerator.generateBusinessContent();
+      res.json({ 
+        success: true, 
+        message: "Business and AI content generation started successfully" 
+      });
+    } catch (error) {
+      console.error("Business blog generation error:", error);
+      res.status(500).json({ 
+        error: "Failed to generate business content",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
@@ -627,6 +644,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(status);
     } catch (error) {
       res.status(500).json({ error: "Failed to get blog generator status" });
+    }
+  });
+
+  app.post("/api/blog-generator/demo", requireAuth, async (req, res) => {
+    try {
+      const { DemoContentService } = await import("./services/demo-content");
+      await DemoContentService.createDemoBlogs();
+      res.json({ 
+        success: true, 
+        message: "Demo blog content created successfully" 
+      });
+    } catch (error) {
+      console.error("Demo blog creation error:", error);
+      res.status(500).json({ 
+        error: "Failed to create demo content",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
