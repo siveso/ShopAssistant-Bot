@@ -1,16 +1,63 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProductSchema, insertOrderSchema, insertUserSchema } from "@shared/schema";
+import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema } from "@shared/schema";
 import { telegramBot } from "./services/telegram-bot";
 import { MarketingScheduler } from "./services/marketing-scheduler";
+import { AuthService, requireAuth } from "./auth";
 
 // Global marketing scheduler instance
 let marketingScheduler: MarketingScheduler | null = null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Dashboard Stats
-  app.get("/api/dashboard/stats", async (req, res) => {
+  // Initialize default admin user
+  await AuthService.createDefaultAdmin();
+
+  // Auth Routes (Public)
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const validatedData = loginSchema.parse(req.body);
+      const result = await AuthService.loginAdmin(validatedData);
+      
+      if (!result) {
+        return res.status(401).json({ error: "Username yoki parol noto'g'ri" });
+      }
+
+      // Set cookie for browser
+      res.cookie('sessionToken', result.sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'strict'
+      });
+
+      res.json({ 
+        success: true, 
+        admin: result.admin,
+        sessionToken: result.sessionToken
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    const sessionToken = req.headers.authorization?.replace("Bearer ", "") || req.cookies?.sessionToken;
+    
+    if (sessionToken) {
+      await AuthService.logout(sessionToken);
+    }
+
+    res.clearCookie('sessionToken');
+    res.json({ success: true });
+  });
+
+  app.get("/api/auth/me", requireAuth, async (req, res) => {
+    res.json(req.admin);
+  });
+
+  // Dashboard Stats (Protected)
+  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);

@@ -1,18 +1,21 @@
-import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { LogOut, ArrowLeft } from "lucide-react";
 
 export default function Logout() {
   const [, setLocation] = useLocation();
+  const { logout } = useAuth();
+  const { toast } = useToast();
 
   const handleLogout = () => {
-    // Clear any session data here if needed
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // Redirect to login page or show confirmation
-    alert("Tizimdan muvaffaqiyatli chiqildi!");
+    logout();
+    toast({
+      title: "Tizimdan chiqildi",
+      description: "Siz muvaffaqiyatli tizimdan chiqdingiz.",
+    });
     setLocation("/");
   };
 
@@ -26,12 +29,12 @@ export default function Logout() {
         <CardContent className="p-8 text-center">
           <div className="mb-6">
             <div className="p-4 bg-orange-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <i className="fas fa-sign-out-alt text-orange-600 text-2xl"></i>
+              <LogOut className="text-orange-600 w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-semibold text-secondary-800 mb-2">
+            <h1 className="text-2xl font-semibold text-gray-800 mb-2">
               Tizimdan chiqish
             </h1>
-            <p className="text-secondary-600">
+            <p className="text-gray-600">
               Haqiqatan ham tizimdan chiqishni xohlaysizmi?
             </p>
           </div>
@@ -41,7 +44,7 @@ export default function Logout() {
               onClick={handleLogout}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
-              <i className="fas fa-sign-out-alt mr-2"></i>
+              <LogOut className="w-4 h-4 mr-2" />
               Ha, chiqish
             </Button>
             <Button 
@@ -49,6 +52,7 @@ export default function Logout() {
               onClick={handleCancel}
               className="w-full"
             >
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Bekor qilish
             </Button>
           </div>

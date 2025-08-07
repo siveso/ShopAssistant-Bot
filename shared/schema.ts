@@ -49,6 +49,25 @@ export const conversations = pgTable("conversations", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const adminUsers = pgTable("admin_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").unique().notNull(),
+  password: text("password").notNull(), // hashed password
+  fullName: text("full_name").notNull(),
+  role: varchar("role", { enum: ["admin", "moderator"] }).default("admin"),
+  isActive: boolean("is_active").default(true),
+  lastLoginAt: timestamp("last_login_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const adminSessions = pgTable("admin_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminId: varchar("admin_id").references(() => adminUsers.id).notNull(),
+  sessionToken: text("session_token").unique().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const botSettings = pgTable("bot_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   telegramBotToken: text("telegram_bot_token"),
@@ -87,6 +106,17 @@ export const conversationsRelations = relations(conversations, ({ one }) => ({
   }),
 }));
 
+export const adminUsersRelations = relations(adminUsers, ({ many }) => ({
+  sessions: many(adminSessions),
+}));
+
+export const adminSessionsRelations = relations(adminSessions, ({ one }) => ({
+  admin: one(adminUsers, {
+    fields: [adminSessions.adminId],
+    references: [adminUsers.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -114,6 +144,17 @@ export const insertBotSettingsSchema = createInsertSchema(botSettings).omit({
   updatedAt: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+  lastLoginAt: true,
+});
+
+export const loginSchema = z.object({
+  username: z.string().min(3, "Username kamida 3 ta harf bo'lishi kerak"),
+  password: z.string().min(6, "Parol kamida 6 ta harf bo'lishi kerak"),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -129,3 +170,10 @@ export type InsertConversation = z.infer<typeof insertConversationSchema>;
 
 export type BotSettings = typeof botSettings.$inferSelect;
 export type InsertBotSettings = z.infer<typeof insertBotSettingsSchema>;
+
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+
+export type AdminSession = typeof adminSessions.$inferSelect;
+
+export type LoginRequest = z.infer<typeof loginSchema>;

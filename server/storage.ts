@@ -1,10 +1,12 @@
 import { 
-  users, products, orders, conversations, botSettings,
+  users, products, orders, conversations, botSettings, adminUsers, adminSessions,
   type User, type InsertUser,
   type Product, type InsertProduct,
   type Order, type InsertOrder,
   type Conversation, type InsertConversation,
-  type BotSettings, type InsertBotSettings
+  type BotSettings, type InsertBotSettings,
+  type AdminUser, type InsertAdminUser,
+  type AdminSession
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, like, count } from "drizzle-orm";
@@ -48,6 +50,17 @@ export interface IStorage {
     totalRevenue: number;
     messagesCount: number;
   }>;
+
+  // Admin Users
+  getAdminById(id: string): Promise<AdminUser | undefined>;
+  getAdminByUsername(username: string): Promise<AdminUser | undefined>;
+  createAdminUser(admin: InsertAdminUser): Promise<AdminUser>;
+  updateAdminLastLogin(id: string): Promise<void>;
+
+  // Admin Sessions
+  createAdminSession(session: { adminId: string; sessionToken: string; expiresAt: Date }): Promise<AdminSession>;
+  getAdminSession(sessionToken: string): Promise<AdminSession | undefined>;
+  deleteAdminSession(sessionToken: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -212,6 +225,41 @@ export class DatabaseStorage implements IStorage {
       totalRevenue,
       messagesCount: conversationCount.count
     };
+  }
+
+  // Admin Users
+  async getAdminById(id: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
+    return admin || undefined;
+  }
+
+  async getAdminByUsername(username: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
+    return admin || undefined;
+  }
+
+  async createAdminUser(insertAdmin: InsertAdminUser): Promise<AdminUser> {
+    const [admin] = await db.insert(adminUsers).values(insertAdmin).returning();
+    return admin;
+  }
+
+  async updateAdminLastLogin(id: string): Promise<void> {
+    await db.update(adminUsers).set({ lastLoginAt: new Date() }).where(eq(adminUsers.id, id));
+  }
+
+  // Admin Sessions
+  async createAdminSession(sessionData: { adminId: string; sessionToken: string; expiresAt: Date }): Promise<AdminSession> {
+    const [session] = await db.insert(adminSessions).values(sessionData).returning();
+    return session;
+  }
+
+  async getAdminSession(sessionToken: string): Promise<AdminSession | undefined> {
+    const [session] = await db.select().from(adminSessions).where(eq(adminSessions.sessionToken, sessionToken));
+    return session || undefined;
+  }
+
+  async deleteAdminSession(sessionToken: string): Promise<void> {
+    await db.delete(adminSessions).where(eq(adminSessions.sessionToken, sessionToken));
   }
 }
 
