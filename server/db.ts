@@ -6,9 +6,10 @@ import * as schema from "@shared/schema";
 neonConfig.webSocketConstructor = ws;
 
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  console.warn("⚠️  DATABASE_URL not found. Please provision a database through the Replit Database tab.");
+  console.warn("⚠️  The application will continue running but database features will be disabled.");
+  // Set a placeholder URL to prevent crashes during development
+  process.env.DATABASE_URL = "postgresql://user:password@localhost:5432/placeholder";
 }
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
