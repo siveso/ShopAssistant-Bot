@@ -151,11 +151,17 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
+}).extend({
+  price: z.coerce.number().min(0, "Narx 0 dan katta bo'lishi kerak"),
+  stockQuantity: z.coerce.number().int().min(0, "Miqdor 0 dan katta bo'lishi kerak"),
 });
 
 export const insertOrderSchema = createInsertSchema(orders).omit({
   id: true,
   createdAt: true,
+}).extend({
+  totalPrice: z.coerce.number().min(0, "Jami narx 0 dan katta bo'lishi kerak"),
+  quantity: z.coerce.number().int().min(1, "Miqdor 1 dan katta bo'lishi kerak"),
 });
 
 export const insertConversationSchema = createInsertSchema(conversations).omit({

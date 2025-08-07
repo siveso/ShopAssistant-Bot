@@ -92,17 +92,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Raw request body:', req.body);
       
-      // Convert string numbers to actual numbers
-      const processedData = {
-        ...req.body,
-        price: req.body.price ? parseFloat(req.body.price) : 0,
-        stockQuantity: req.body.stockQuantity ? parseInt(req.body.stockQuantity) : 0,
-        isActive: req.body.isActive !== undefined ? req.body.isActive : true
-      };
-      
-      console.log('Processed data:', processedData);
-      
-      const validatedData = insertProductSchema.parse(processedData);
+      // z.coerce will automatically handle string to number conversion
+      const validatedData = insertProductSchema.parse(req.body);
       const product = await storage.createProduct(validatedData);
       res.status(201).json(product);
     } catch (error) {
@@ -115,22 +106,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Raw update request body:', req.body);
       
-      // Convert string numbers to actual numbers
-      const processedData = {
-        ...req.body,
-        price: req.body.price ? parseFloat(req.body.price) : undefined,
-        stockQuantity: req.body.stockQuantity ? parseInt(req.body.stockQuantity) : undefined,
-        isActive: req.body.isActive !== undefined ? req.body.isActive : undefined
-      };
-      
-      // Remove undefined values
-      Object.keys(processedData).forEach(key => 
-        processedData[key] === undefined && delete processedData[key]
-      );
-      
-      console.log('Processed update data:', processedData);
-      
-      const validatedData = insertProductSchema.partial().parse(processedData);
+      // z.coerce will automatically handle string to number conversion
+      const validatedData = insertProductSchema.partial().parse(req.body);
       const product = await storage.updateProduct(req.params.id, validatedData);
       if (!product) {
         return res.status(404).json({ error: "Product not found" });
