@@ -268,7 +268,7 @@ class FallbackStorage implements IStorage {
   private adminUser = {
     id: "admin-id",
     username: "admin", 
-    password: "$2a$12$LlnIGELwUWDYOzXQ9pKaRu8M4cV5zQcGgLl8C4CXYs8ZQFYKrJ1UC", // admin123 hashed
+    password: "$2b$12$TtSA6npfGeSMWsBKZguPTeJNcRcMRifQkIB0XnbSC/0xaeCkQEFf.", // admin123 hashed
     fullName: "Administrator",
     role: "admin" as const,
     isActive: true,
