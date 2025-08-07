@@ -425,7 +425,11 @@ class TelegramBotService {
     if (!this.bot) return;
 
     try {
-      const orders = await storage.getOrdersByUser(userId);
+      // Get user from database first
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) return;
+
+      const orders = await storage.getOrdersByUser(user.id);
       const pendingOrders = orders.filter(order => order.orderStatus === "pending");
       
       if (pendingOrders.length === 0) {
@@ -534,9 +538,19 @@ class TelegramBotService {
         return;
       }
 
+      // Get user from database
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) {
+        const errorMessage = language === "uz"
+          ? "Foydalanuvchi topilmadi. /start buyrug'ini bosing."
+          : "Пользователь не найден. Нажмите /start.";
+        await this.bot.sendMessage(chatId, errorMessage);
+        return;
+      }
+
       // Create order
       const order = await storage.createOrder({
-        userId,
+        userId: user.id,
         productId,
         quantity: 1,
         totalPrice: product.price
@@ -587,7 +601,11 @@ class TelegramBotService {
     if (!this.bot) return;
 
     try {
-      const orders = await storage.getOrdersByUser(userId);
+      // Get user from database first
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) return;
+
+      const orders = await storage.getOrdersByUser(user.id);
       const pendingOrders = orders.filter(order => order.orderStatus === "pending");
       
       if (pendingOrders.length === 0) {
@@ -622,7 +640,11 @@ class TelegramBotService {
     if (!this.bot) return;
 
     try {
-      const orders = await storage.getOrdersByUser(userId);
+      // Get user from database first
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) return;
+
+      const orders = await storage.getOrdersByUser(user.id);
       const pendingOrders = orders.filter(order => order.orderStatus === "pending");
       
       // Update order status to cancelled

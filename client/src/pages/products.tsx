@@ -1,21 +1,49 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AddProductModal } from "@/components/modals/add-product-modal";
+import { EditProductModal } from "@/components/modals/edit-product-modal";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: products, isLoading } = useQuery({
+  const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
-  const filteredProducts = products?.filter((product: Product) =>
+  const deleteProductMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const response = await apiRequest("DELETE", `/api/products/${productId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Muvaffaqiyat",
+        description: "Mahsulot o'chirildi",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+    },
+    onError: () => {
+      toast({
+        title: "Xatolik",
+        description: "Mahsulotni o'chirishda xatolik yuz berdi",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredProducts = products.filter((product: Product) =>
     product.nameUz.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.nameRu.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -121,8 +149,8 @@ export default function Products() {
                     <span className="text-lg font-bold text-secondary-800">
                       ${product.price}
                     </span>
-                    <Badge variant={product.stockQuantity > 0 ? "default" : "destructive"}>
-                      {product.stockQuantity > 0 ? `${product.stockQuantity} dona` : "Tugagan"}
+                    <Badge variant={(product.stockQuantity || 0) > 0 ? "default" : "destructive"}>
+                      {(product.stockQuantity || 0) > 0 ? `${product.stockQuantity || 0} dona` : "Tugagan"}
                     </Badge>
                   </div>
 
@@ -133,11 +161,26 @@ export default function Products() {
                   )}
 
                   <div className="flex space-x-2 pt-2">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => setEditingProduct(product)}
+                    >
                       <i className="fas fa-edit mr-1"></i>
                       Tahrirlash
                     </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        if (confirm("Bu mahsulotni o'chirishni tasdiqlaysizmi?")) {
+                          deleteProductMutation.mutate(product.id);
+                        }
+                      }}
+                      disabled={deleteProductMutation.isPending}
+                    >
                       <i className="fas fa-trash"></i>
                     </Button>
                   </div>
@@ -152,6 +195,14 @@ export default function Products() {
         open={showAddProduct} 
         onOpenChange={setShowAddProduct}
       />
+      
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          open={!!editingProduct}
+          onOpenChange={(open: boolean) => !open && setEditingProduct(null)}
+        />
+      )}
     </div>
   );
 }

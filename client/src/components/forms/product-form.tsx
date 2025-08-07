@@ -19,9 +19,22 @@ interface ProductFormProps {
   onSubmit: (data: ProductFormData) => void;
   isLoading?: boolean;
   defaultValues?: Partial<ProductFormData>;
+  initialData?: any;
 }
 
-export function ProductForm({ onSubmit, isLoading, defaultValues }: ProductFormProps) {
+export function ProductForm({ onSubmit, isLoading, defaultValues, initialData }: ProductFormProps) {
+  // Convert initialData to form format
+  const formDefaults = initialData ? {
+    nameUz: initialData.nameUz || "",
+    nameRu: initialData.nameRu || "",
+    descriptionUz: initialData.descriptionUz || "",
+    descriptionRu: initialData.descriptionRu || "",
+    price: initialData.price?.toString() || "",
+    stockQuantity: initialData.stockQuantity?.toString() || "",
+    category: initialData.category || "",
+    imageUrl: initialData.imageUrl || "",
+    isActive: initialData.isActive ?? true,
+  } : undefined;
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -35,6 +48,7 @@ export function ProductForm({ onSubmit, isLoading, defaultValues }: ProductFormP
       imageUrl: "",
       isActive: true,
       ...defaultValues,
+      ...formDefaults,
     },
   });
 
@@ -136,7 +150,7 @@ export function ProductForm({ onSubmit, isLoading, defaultValues }: ProductFormP
               <FormLabel className="text-sm font-medium text-secondary-700">
                 Kategoriya
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                 <FormControl>
                   <SelectTrigger className="border-secondary-300 focus:ring-primary-500">
                     <SelectValue placeholder="Kategoriyani tanlang" />
@@ -170,6 +184,7 @@ export function ProductForm({ onSubmit, isLoading, defaultValues }: ProductFormP
                   placeholder="https://example.com/image.jpg"
                   className="border-secondary-300 focus:ring-primary-500"
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -191,6 +206,7 @@ export function ProductForm({ onSubmit, isLoading, defaultValues }: ProductFormP
                   className="border-secondary-300 focus:ring-primary-500"
                   rows={3}
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -212,6 +228,7 @@ export function ProductForm({ onSubmit, isLoading, defaultValues }: ProductFormP
                   className="border-secondary-300 focus:ring-primary-500"
                   rows={3}
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
