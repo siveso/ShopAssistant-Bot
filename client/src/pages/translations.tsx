@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,85 +7,207 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-
-interface Translation {
-  key: string;
-  uz: string;
-  ru: string;
-  category: string;
-}
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { Translation, InsertTranslation } from "@shared/schema";
 
 export default function Translations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<"all" | "bot" | "admin" | "messages">("all");
   const [editingTranslation, setEditingTranslation] = useState<Translation | null>(null);
+  const [showNewTranslationForm, setShowNewTranslationForm] = useState(false);
+  const [newTranslation, setNewTranslation] = useState<InsertTranslation>({
+    key: "",
+    uz: "",
+    ru: "",
+    category: "bot"
+  });
 
-  // Mock translations data
-  const translations: Translation[] = [
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch translations
+  const { data: translations = [], isLoading } = useQuery({
+    queryKey: ["/api/translations"],
+    queryFn: async () => {
+      const response = await fetch("/api/translations", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch translations');
+      return response.json() as Promise<Translation[]>;
+    }
+  });
+
+  // Update translation mutation
+  const updateTranslationMutation = useMutation({
+    mutationFn: async (data: { id: string; translation: Partial<InsertTranslation> }) => {
+      const response = await fetch(`/api/translations/${data.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data.translation)
+      });
+      if (!response.ok) throw new Error('Failed to update translation');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/translations"] });
+      setEditingTranslation(null);
+      toast({ title: "Muvaffaqiyat", description: "Tarjima yangilandi" });
+    },
+    onError: () => {
+      toast({ title: "Xatolik", description: "Tarjimani yangilashda xatolik yuz berdi", variant: "destructive" });
+    }
+  });
+
+  // Create translation mutation
+  const createTranslationMutation = useMutation({
+    mutationFn: async (translation: InsertTranslation) => {
+      const response = await fetch("/api/translations", {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(translation)
+      });
+      if (!response.ok) throw new Error('Failed to create translation');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/translations"] });
+      setShowNewTranslationForm(false);
+      setNewTranslation({ key: "", uz: "", ru: "", category: "bot" });
+      toast({ title: "Muvaffaqiyat", description: "Yangi tarjima qo'shildi" });
+    },
+    onError: () => {
+      toast({ title: "Xatolik", description: "Tarjimani yaratishda xatolik yuz berdi", variant: "destructive" });
+    }
+  });
+
+  // Delete translation mutation
+  const deleteTranslationMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/translations/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to delete translation');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/translations"] });
+      toast({ title: "Muvaffaqiyat", description: "Tarjima o'chirildi" });
+    },
+    onError: () => {
+      toast({ title: "Xatolik", description: "Tarjimani o'chirishda xatolik yuz berdi", variant: "destructive" });
+    }
+  });
+
+  // Mock translations for demo if no data
+  const mockTranslations: Translation[] = [
     {
+      id: "mock-1",
       key: "welcome_message",
       uz: "Assalomu alaykum! Bizning online do'konimizga xush kelibsiz!",
       ru: "Здравствуйте! Добро пожаловать в наш интернет-магазин!",
-      category: "bot"
+      category: "bot",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-2",
       key: "catalog_button",
       uz: "📦 Katalog",
       ru: "📦 Каталог",
-      category: "bot"
+      category: "bot",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-3",
       key: "cart_button",
       uz: "🛒 Savatcha",
       ru: "🛒 Корзина", 
-      category: "bot"
+      category: "bot",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-4",
       key: "contact_button",
       uz: "📞 Biz bilan aloqa",
       ru: "📞 Связь с нами",
-      category: "bot"
+      category: "bot",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-5",
       key: "order_success",
       uz: "✅ Buyurtmangiz qabul qilindi!",
       ru: "✅ Ваш заказ принят!",
-      category: "messages"
+      category: "messages",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-6",
       key: "cart_empty",
       uz: "🛒 Savatingiz bo'sh. Katalogdan mahsulot tanlang!",
       ru: "🛒 Ваша корзина пуста. Выберите товары из каталога!",
-      category: "messages"
+      category: "messages",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-7",
       key: "products_title",
       uz: "Mahsulotlar",
       ru: "Товары",
-      category: "admin"
+      category: "admin",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-8",
       key: "orders_title",
       uz: "Buyurtmalar",
       ru: "Заказы",
-      category: "admin"
+      category: "admin",
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "mock-9",
       key: "users_title", 
       uz: "Foydalanuvchilar",
       ru: "Пользователи",
-      category: "admin"
+      category: "admin",
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   ];
 
+  // Use real data if available, otherwise fallback to mock
+  const currentTranslations = translations.length > 0 ? translations : mockTranslations;
+
   const categories = [
-    { key: "all", label: "Barchasi", count: translations.length },
-    { key: "bot", label: "Bot", count: translations.filter(t => t.category === "bot").length },
-    { key: "admin", label: "Admin Panel", count: translations.filter(t => t.category === "admin").length },
-    { key: "messages", label: "Xabarlar", count: translations.filter(t => t.category === "messages").length }
+    { key: "all", label: "Barchasi", count: currentTranslations.length },
+    { key: "bot", label: "Bot", count: currentTranslations.filter(t => t.category === "bot").length },
+    { key: "admin", label: "Admin Panel", count: currentTranslations.filter(t => t.category === "admin").length },
+    { key: "messages", label: "Xabarlar", count: currentTranslations.filter(t => t.category === "messages").length }
   ];
 
-  const filteredTranslations = translations.filter(translation => {
+  const filteredTranslations = currentTranslations.filter(translation => {
     const matchesSearch = translation.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          translation.uz.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          translation.ru.toLowerCase().includes(searchQuery.toLowerCase());
@@ -92,11 +215,45 @@ export default function Translations() {
     return matchesSearch && matchesCategory;
   });
 
+  const handleSaveTranslation = () => {
+    if (!editingTranslation) return;
+    
+    updateTranslationMutation.mutate({
+      id: editingTranslation.id,
+      translation: {
+        key: editingTranslation.key,
+        uz: editingTranslation.uz,
+        ru: editingTranslation.ru,
+        category: editingTranslation.category
+      }
+    });
+  };
+
+  const handleCreateTranslation = () => {
+    if (!newTranslation.key || !newTranslation.uz || !newTranslation.ru) {
+      toast({ title: "Xatolik", description: "Barcha maydonlar to'ldirilishi kerak", variant: "destructive" });
+      return;
+    }
+    
+    createTranslationMutation.mutate(newTranslation);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="text-center">Yuklanmoqda...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-secondary-800">Tarjimalar</h1>
-        <Button className="bg-primary-600 hover:bg-primary-700 text-white">
+        <Button 
+          onClick={() => setShowNewTranslationForm(true)}
+          className="bg-primary-600 hover:bg-primary-700 text-white"
+        >
           <i className="fas fa-plus mr-2"></i>
           Yangi Tarjima
         </Button>
@@ -218,6 +375,10 @@ export default function Translations() {
                 <Textarea
                   id="edit-uz"
                   value={editingTranslation.uz}
+                  onChange={(e) => setEditingTranslation({
+                    ...editingTranslation,
+                    uz: e.target.value
+                  })}
                   rows={3}
                   className="border-secondary-300"
                 />
@@ -227,6 +388,10 @@ export default function Translations() {
                 <Textarea
                   id="edit-ru" 
                   value={editingTranslation.ru}
+                  onChange={(e) => setEditingTranslation({
+                    ...editingTranslation,
+                    ru: e.target.value
+                  })}
                   rows={3}
                   className="border-secondary-300"
                 />
@@ -238,8 +403,12 @@ export default function Translations() {
                 >
                   Bekor qilish
                 </Button>
-                <Button className="bg-primary-600 hover:bg-primary-700 text-white">
-                  Saqlash
+                <Button 
+                  onClick={handleSaveTranslation}
+                  disabled={updateTranslationMutation.isPending}
+                  className="bg-primary-600 hover:bg-primary-700 text-white"
+                >
+                  {updateTranslationMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
                 </Button>
               </div>
             </CardContent>

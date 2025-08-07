@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema } from "@shared/schema";
+import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema, insertTranslationSchema } from "@shared/schema";
 import { telegramBot } from "./services/telegram-bot";
 import { MarketingScheduler } from "./services/marketing-scheduler";
 import { AuthService, requireAuth } from "./auth";
@@ -324,6 +324,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     marketingScheduler.startScheduler();
     console.log("Marketing scheduler initialized and started");
   }
+
+  // Translations Routes (Protected)
+  app.get("/api/translations", requireAuth, async (req, res) => {
+    try {
+      const translations = await storage.getAllTranslations();
+      res.json(translations);
+    } catch (error) {
+      res.status(500).json({ error: "Tarjimalarni olishda xatolik" });
+    }
+  });
+
+  app.get("/api/translations/:id", requireAuth, async (req, res) => {
+    try {
+      const translation = await storage.getTranslation(req.params.id);
+      if (!translation) {
+        return res.status(404).json({ error: "Tarjima topilmadi" });
+      }
+      res.json(translation);
+    } catch (error) {
+      res.status(500).json({ error: "Tarjimani olishda xatolik" });
+    }
+  });
+
+  app.post("/api/translations", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertTranslationSchema.parse(req.body);
+      
+      // Check if key already exists
+      const existing = await storage.getTranslationByKey(validatedData.key);
+      if (existing) {
+        return res.status(400).json({ error: "Bu kalit allaqachon mavjud" });
+      }
+
+      const translation = await storage.createTranslation(validatedData);
+      res.status(201).json(translation);
+    } catch (error) {
+      res.status(400).json({ error: "Tarjima yaratishda xatolik" });
+    }
+  });
+
+  app.put("/api/translations/:id", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertTranslationSchema.partial().parse(req.body);
+      const translation = await storage.updateTranslation(req.params.id, validatedData);
+      
+      if (!translation) {
+        return res.status(404).json({ error: "Tarjima topilmadi" });
+      }
+      
+      res.json(translation);
+    } catch (error) {
+      res.status(400).json({ error: "Tarjimani yangilashda xatolik" });
+    }
+  });
+
+  app.delete("/api/translations/:id", requireAuth, async (req, res) => {
+    try {
+      const deleted = await storage.deleteTranslation(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Tarjima topilmadi" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Tarjimani o'chirishda xatolik" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

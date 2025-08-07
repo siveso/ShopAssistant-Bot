@@ -1,12 +1,13 @@
 import { 
-  users, products, orders, conversations, botSettings, adminUsers, adminSessions,
+  users, products, orders, conversations, botSettings, adminUsers, adminSessions, translations,
   type User, type InsertUser,
   type Product, type InsertProduct,
   type Order, type InsertOrder,
   type Conversation, type InsertConversation,
   type BotSettings, type InsertBotSettings,
   type AdminUser, type InsertAdminUser,
-  type AdminSession
+  type AdminSession,
+  type Translation, type InsertTranslation
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, like, count } from "drizzle-orm";
@@ -61,6 +62,14 @@ export interface IStorage {
   createAdminSession(session: { adminId: string; sessionToken: string; expiresAt: Date }): Promise<AdminSession>;
   getAdminSession(sessionToken: string): Promise<AdminSession | undefined>;
   deleteAdminSession(sessionToken: string): Promise<void>;
+
+  // Translations
+  getAllTranslations(): Promise<Translation[]>;
+  getTranslation(id: string): Promise<Translation | undefined>;
+  getTranslationByKey(key: string): Promise<Translation | undefined>;
+  createTranslation(translation: InsertTranslation): Promise<Translation>;
+  updateTranslation(id: string, translation: Partial<InsertTranslation>): Promise<Translation | undefined>;
+  deleteTranslation(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -261,6 +270,39 @@ export class DatabaseStorage implements IStorage {
   async deleteAdminSession(sessionToken: string): Promise<void> {
     await db.delete(adminSessions).where(eq(adminSessions.sessionToken, sessionToken));
   }
+
+  // Translations
+  async getAllTranslations(): Promise<Translation[]> {
+    return await db.select().from(translations).orderBy(translations.category, translations.key);
+  }
+
+  async getTranslation(id: string): Promise<Translation | undefined> {
+    const [translation] = await db.select().from(translations).where(eq(translations.id, id));
+    return translation || undefined;
+  }
+
+  async getTranslationByKey(key: string): Promise<Translation | undefined> {
+    const [translation] = await db.select().from(translations).where(eq(translations.key, key));
+    return translation || undefined;
+  }
+
+  async createTranslation(translation: InsertTranslation): Promise<Translation> {
+    const [newTranslation] = await db.insert(translations).values(translation).returning();
+    return newTranslation;
+  }
+
+  async updateTranslation(id: string, translation: Partial<InsertTranslation>): Promise<Translation | undefined> {
+    const [updated] = await db.update(translations)
+      .set({ ...translation, updatedAt: new Date() })
+      .where(eq(translations.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteTranslation(id: string): Promise<boolean> {
+    const result = await db.delete(translations).where(eq(translations.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
 }
 
 // Fallback storage for when database is not available
@@ -395,10 +437,79 @@ class FallbackStorage implements IStorage {
       telegramBotToken: settings.telegramBotToken || null,
       instagramAccessToken: settings.instagramAccessToken || null,
       geminiApiKey: settings.geminiApiKey || null,
+      companyName: settings.companyName || null,
+      companyDescriptionUz: settings.companyDescriptionUz || null,
+      companyDescriptionRu: settings.companyDescriptionRu || null,
+      companyAddress: settings.companyAddress || null,
+      workingHours: settings.workingHours || null,
+      website: settings.website || null,
+      email: settings.email || null,
+      contactInfo: settings.contactInfo || null,
+      operatorPhone: settings.operatorPhone || null,
       isActive: true,
       ruleBasedResponses: settings.ruleBasedResponses || {},
       updatedAt: new Date()
     };
+  }
+
+  // Translations for fallback storage
+  async getAllTranslations(): Promise<Translation[]> {
+    // Return mock translations for demo
+    return [
+      {
+        id: "trans-1",
+        key: "welcome_message",
+        uz: "Assalomu alaykum! Bizning online do'konimizga xush kelibsiz!",
+        ru: "Здравствуйте! Добро пожаловать в наш интернет-магазин!",
+        category: "bot",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: "trans-2", 
+        key: "catalog_button",
+        uz: "📦 Katalog",
+        ru: "📦 Каталог",
+        category: "bot",
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+  }
+
+  async getTranslation(id: string): Promise<Translation | undefined> {
+    const translations = await this.getAllTranslations();
+    return translations.find(t => t.id === id);
+  }
+
+  async getTranslationByKey(key: string): Promise<Translation | undefined> {
+    const translations = await this.getAllTranslations();
+    return translations.find(t => t.key === key);
+  }
+
+  async createTranslation(translation: InsertTranslation): Promise<Translation> {
+    return {
+      id: "new-trans-" + Date.now(),
+      ...translation,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+
+  async updateTranslation(id: string, translation: Partial<InsertTranslation>): Promise<Translation | undefined> {
+    return {
+      id,
+      key: translation.key || "updated_key",
+      uz: translation.uz || "Updated UZ",
+      ru: translation.ru || "Updated RU", 
+      category: translation.category || "bot",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+
+  async deleteTranslation(id: string): Promise<boolean> {
+    return true;
   }
   async getDashboardStats(): Promise<{ totalUsers: number; activeOrders: number; totalRevenue: number; messagesCount: number; }> {
     return { totalUsers: 0, activeOrders: 0, totalRevenue: 0, messagesCount: 0 };

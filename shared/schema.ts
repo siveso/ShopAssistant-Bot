@@ -189,3 +189,23 @@ export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type AdminSession = typeof adminSessions.$inferSelect;
 
 export type LoginRequest = z.infer<typeof loginSchema>;
+
+// Translations schema
+export const translations = pgTable("translations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").unique().notNull(),
+  uz: text("uz").notNull(),
+  ru: text("ru").notNull(),
+  category: varchar("category", { enum: ["bot", "admin", "messages"] }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTranslationSchema = createInsertSchema(translations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Translation = typeof translations.$inferSelect;
+export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
