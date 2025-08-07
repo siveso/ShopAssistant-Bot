@@ -345,7 +345,8 @@ class TelegramBotService {
       });
     } catch (error) {
       console.error("Error handling checkout info:", error);
-      const errorMessage = user?.languageCode === "uz"
+      const userState = this.userStates.get(userId);
+      const errorMessage = userState?.language === "uz"
         ? "Buyurtmani rasmiylashtirish jarayonida xatolik yuz berdi."
         : "Ошибка при оформлении заказа.";
       
@@ -723,7 +724,7 @@ class TelegramBotService {
         productName: name,
         quantity: quantity,
         unitPrice: product.price,
-        totalPrice: totalPrice.toString(),
+        totalPrice: totalPrice,
         orderStatus: "pending",
         customerName: "",
         customerPhone: "",
@@ -837,7 +838,8 @@ class TelegramBotService {
       
     } catch (error) {
       console.error("Error handling quantity input:", error);
-      const errorMessage = userState?.language === "uz"
+      const currentUserState = this.userStates.get(userId);
+      const errorMessage = currentUserState?.language === "uz"
         ? "Miqdorni qayta ishlashda xatolik yuz berdi."
         : "Ошибка при обработке количества.";
       
@@ -1028,7 +1030,9 @@ class TelegramBotService {
       const order = await storage.createOrder({
         userId: user.id,
         productId,
+        productName: language === "uz" ? product.nameUz : product.nameRu,
         quantity: 1,
+        unitPrice: product.price,
         totalPrice: parseFloat(product.price.toString())
       });
 
