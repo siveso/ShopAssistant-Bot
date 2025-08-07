@@ -21,15 +21,17 @@ export function AddProductModal({ open, onOpenChange }: AddProductModalProps) {
         nameRu: data.nameRu,
         descriptionUz: data.descriptionUz || "",
         descriptionRu: data.descriptionRu || "",
-        price: data.price,
+        price: parseFloat(data.price),
         stockQuantity: parseInt(data.stockQuantity),
         imageUrl: data.imageUrl || null,
         category: data.category || null,
         isActive: true,
       };
 
-      const response = await apiRequest("POST", "/api/products", productData);
-      return response.json();
+      return await apiRequest("/api/products", {
+        method: "POST",
+        body: JSON.stringify(productData),
+      });
     },
     onSuccess: () => {
       toast({

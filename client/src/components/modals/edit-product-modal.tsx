@@ -22,15 +22,17 @@ export function EditProductModal({ product, open, onOpenChange }: EditProductMod
         nameRu: data.nameRu,
         descriptionUz: data.descriptionUz || "",
         descriptionRu: data.descriptionRu || "",
-        price: data.price,
+        price: parseFloat(data.price),
         stockQuantity: parseInt(data.stockQuantity),
         imageUrl: data.imageUrl || null,
         category: data.category || null,
         isActive: data.isActive ?? true,
       };
 
-      const response = await apiRequest("PUT", `/api/products/${product.id}`, productData);
-      return response.json();
+      return await apiRequest(`/api/products/${product.id}`, {
+        method: "PUT",
+        body: JSON.stringify(productData),
+      });
     },
     onSuccess: () => {
       toast({

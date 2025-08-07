@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface BotSettings {
   id?: string;
   telegramBotToken?: string;
+  telegramBotUsername?: string;
   instagramAccessToken?: string;
   geminiApiKey?: string;
   // Company Information
@@ -44,6 +45,7 @@ export default function BotSettings() {
 
   const [formData, setFormData] = useState<BotSettings>({
     telegramBotToken: "",
+    telegramBotUsername: "",
     instagramAccessToken: "",
     geminiApiKey: "",
     // Company Information
@@ -300,15 +302,29 @@ export default function BotSettings() {
                 <CardTitle>API Kalitlari</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="telegramToken">Telegram Bot Token</Label>
-                  <Input
-                    id="telegramToken"
-                    type="password"
-                    value={formData.telegramBotToken}
-                    onChange={(e) => handleInputChange("telegramBotToken", e.target.value)}
-                    placeholder="1234567890:AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPqq"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="telegramToken">Telegram Bot Token</Label>
+                    <Input
+                      id="telegramToken"
+                      type="password"
+                      value={formData.telegramBotToken}
+                      onChange={(e) => handleInputChange("telegramBotToken", e.target.value)}
+                      placeholder="1234567890:AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPqq"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="telegramBotUsername">Telegram Bot Username</Label>
+                    <Input
+                      id="telegramBotUsername"
+                      value={formData.telegramBotUsername}
+                      onChange={(e) => handleInputChange("telegramBotUsername", e.target.value)}
+                      placeholder="@shop_support"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Masalan: @shop_support (@ belgisiz ham bo'ladi)
+                    </p>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="instagramToken">Instagram Access Token</Label>

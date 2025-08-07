@@ -71,6 +71,7 @@ export const adminSessions = pgTable("admin_sessions", {
 export const botSettings = pgTable("bot_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   telegramBotToken: text("telegram_bot_token"),
+  telegramBotUsername: text("telegram_bot_username"),
   instagramAccessToken: text("instagram_access_token"),
   geminiApiKey: text("gemini_api_key"),
   // Company Information
