@@ -12,6 +12,7 @@ import Users from "@/pages/users";
 import Conversations from "@/pages/conversations";
 import BotSettings from "@/pages/bot-settings";
 import Translations from "@/pages/translations";
+import Categories from "@/pages/categories";
 import Reports from "@/pages/reports";
 import Help from "@/pages/help";
 import Marketing from "@/pages/marketing";
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/conversations" component={Conversations} />
       <Route path="/bot-settings" component={BotSettings} />
       <Route path="/translations" component={Translations} />
+      <Route path="/categories" component={Categories} />
       <Route path="/reports" component={Reports} />
       <Route path="/help" component={Help} />
       <Route path="/marketing" component={Marketing} />

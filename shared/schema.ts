@@ -68,6 +68,18 @@ export const adminSessions = pgTable("admin_sessions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const categories = pgTable("categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nameUz: text("name_uz").notNull(),
+  nameRu: text("name_ru").notNull(),
+  descriptionUz: text("description_uz"),
+  descriptionRu: text("description_ru"),
+  imageUrl: text("image_url"),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const botSettings = pgTable("bot_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   telegramBotToken: text("telegram_bot_token"),
@@ -163,6 +175,11 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
   lastLoginAt: true,
 });
 
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const loginSchema = z.object({
   username: z.string().min(3, "Username kamida 3 ta harf bo'lishi kerak"),
   password: z.string().min(6, "Parol kamida 6 ta harf bo'lishi kerak"),
@@ -186,6 +203,9 @@ export type InsertBotSettings = z.infer<typeof insertBotSettingsSchema>;
 
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
 
 export type AdminSession = typeof adminSessions.$inferSelect;
 

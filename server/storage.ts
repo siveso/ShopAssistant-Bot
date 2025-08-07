@@ -1,5 +1,5 @@
 import { 
-  users, products, orders, conversations, botSettings, adminUsers, adminSessions, translations,
+  users, products, orders, conversations, botSettings, adminUsers, adminSessions, translations, categories,
   type User, type InsertUser,
   type Product, type InsertProduct,
   type Order, type InsertOrder,
@@ -7,7 +7,8 @@ import {
   type BotSettings, type InsertBotSettings,
   type AdminUser, type InsertAdminUser,
   type AdminSession,
-  type Translation, type InsertTranslation
+  type Translation, type InsertTranslation,
+  type Category, type InsertCategory
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, like, count } from "drizzle-orm";
@@ -70,6 +71,13 @@ export interface IStorage {
   createTranslation(translation: InsertTranslation): Promise<Translation>;
   updateTranslation(id: string, translation: Partial<InsertTranslation>): Promise<Translation | undefined>;
   deleteTranslation(id: string): Promise<boolean>;
+
+  // Categories
+  getAllCategories(): Promise<Category[]>;
+  getCategory(id: string): Promise<Category | undefined>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -303,6 +311,31 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(translations).where(eq(translations.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
+
+  // Categories
+  async getAllCategories(): Promise<Category[]> {
+    return await db.select().from(categories).where(eq(categories.isActive, true)).orderBy(categories.sortOrder, desc(categories.createdAt));
+  }
+
+  async getCategory(id: string): Promise<Category | undefined> {
+    const [category] = await db.select().from(categories).where(eq(categories.id, id));
+    return category || undefined;
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const [category] = await db.insert(categories).values(insertCategory).returning();
+    return category;
+  }
+
+  async updateCategory(id: string, insertCategory: Partial<InsertCategory>): Promise<Category | undefined> {
+    const [category] = await db.update(categories).set(insertCategory).where(eq(categories.id, id)).returning();
+    return category || undefined;
+  }
+
+  async deleteCategory(id: string): Promise<boolean> {
+    const result = await db.delete(categories).where(eq(categories.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
 }
 
 // Fallback storage for when database is not available
@@ -511,6 +544,66 @@ class FallbackStorage implements IStorage {
   async deleteTranslation(id: string): Promise<boolean> {
     return true;
   }
+
+  // Categories for fallback storage
+  async getAllCategories(): Promise<Category[]> {
+    return [
+      {
+        id: "cat-1",
+        nameUz: "Elektronika",
+        nameRu: "Электроника",
+        descriptionUz: "Elektron va raqamli mahsulotlar",
+        descriptionRu: "Электронные и цифровые товары",
+        imageUrl: null,
+        isActive: true,
+        sortOrder: 1,
+        createdAt: new Date(),
+      },
+      {
+        id: "cat-2",
+        nameUz: "Kiyim-kechak",
+        nameRu: "Одежда",
+        descriptionUz: "Kiyim va aksessuarlar",
+        descriptionRu: "Одежда и аксессуары",
+        imageUrl: null,
+        isActive: true,
+        sortOrder: 2,
+        createdAt: new Date(),
+      }
+    ];
+  }
+
+  async getCategory(id: string): Promise<Category | undefined> {
+    const categories = await this.getAllCategories();
+    return categories.find(c => c.id === id);
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    return {
+      id: "new-cat-" + Date.now(),
+      ...category,
+      createdAt: new Date(),
+    };
+  }
+
+  async updateCategory(id: string, category: Partial<InsertCategory>): Promise<Category | undefined> {
+    return {
+      id,
+      nameUz: category.nameUz || "Updated UZ",
+      nameRu: category.nameRu || "Updated RU",
+      descriptionUz: category.descriptionUz || null,
+      descriptionRu: category.descriptionRu || null,
+      imageUrl: category.imageUrl || null,
+      isActive: category.isActive ?? true,
+      sortOrder: category.sortOrder || 0,
+      createdAt: new Date(),
+    };
+  }
+
+  async deleteCategory(id: string): Promise<boolean> {
+    return true;
+  }
+
   async getDashboardStats(): Promise<{ totalUsers: number; activeOrders: number; totalRevenue: number; messagesCount: number; }> {
     return { totalUsers: 0, activeOrders: 0, totalRevenue: 0, messagesCount: 0 };
   }

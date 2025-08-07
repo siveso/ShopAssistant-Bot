@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema, insertTranslationSchema } from "@shared/schema";
+import { insertProductSchema, insertOrderSchema, insertUserSchema, loginSchema, insertTranslationSchema, insertCategorySchema } from "@shared/schema";
 import { telegramBot } from "./services/telegram-bot";
 import { MarketingScheduler } from "./services/marketing-scheduler";
 import { AuthService, requireAuth } from "./auth";
@@ -270,6 +270,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(products);
     } catch (error) {
       res.status(500).json({ error: "Failed to search products" });
+    }
+  });
+
+  // Categories
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('Categories fetch error:', error);
+      res.status(500).json({ error: "Failed to fetch categories" });
+    }
+  });
+
+  app.get("/api/categories/:id", async (req, res) => {
+    try {
+      const category = await storage.getCategory(req.params.id);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch category" });
+    }
+  });
+
+  app.post("/api/categories", async (req, res) => {
+    try {
+      console.log('Raw category request body:', req.body);
+      
+      const processedData = {
+        ...req.body,
+        sortOrder: req.body.sortOrder ? parseInt(req.body.sortOrder) : 0,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true
+      };
+      
+      console.log('Processed category data:', processedData);
+      
+      const validatedData = insertCategorySchema.parse(processedData);
+      const category = await storage.createCategory(validatedData);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error('Category creation error:', error);
+      res.status(400).json({ error: error instanceof Error ? error.message : "Invalid category data" });
+    }
+  });
+
+  app.put("/api/categories/:id", async (req, res) => {
+    try {
+      console.log('Raw category update request body:', req.body);
+      
+      const processedData = {
+        ...req.body,
+        sortOrder: req.body.sortOrder ? parseInt(req.body.sortOrder) : undefined,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : undefined
+      };
+      
+      Object.keys(processedData).forEach(key => 
+        processedData[key] === undefined && delete processedData[key]
+      );
+      
+      console.log('Processed category update data:', processedData);
+      
+      const validatedData = insertCategorySchema.partial().parse(processedData);
+      const category = await storage.updateCategory(req.params.id, validatedData);
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      console.error('Category update error:', error);
+      res.status(400).json({ error: error instanceof Error ? error.message : "Invalid category data" });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteCategory(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete category" });
     }
   });
 
