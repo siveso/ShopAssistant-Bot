@@ -263,4 +263,158 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Fallback storage for when database is not available
+class FallbackStorage implements IStorage {
+  private adminUser = {
+    id: "admin-id",
+    username: "admin", 
+    password: "$2a$12$LlnIGELwUWDYOzXQ9pKaRu8M4cV5zQcGgLl8C4CXYs8ZQFYKrJ1UC", // admin123 hashed
+    fullName: "Administrator",
+    role: "admin" as const,
+    isActive: true,
+    lastLoginAt: null,
+    createdAt: new Date()
+  };
+  
+  private sessions: Map<string, AdminSession> = new Map();
+
+  // Admin methods that work in fallback mode
+  async getAdminByUsername(username: string): Promise<AdminUser | undefined> {
+    if (username === "admin") {
+      return this.adminUser;
+    }
+    return undefined;
+  }
+
+  async getAdminById(id: string): Promise<AdminUser | undefined> {
+    if (id === "admin-id") {
+      return this.adminUser;
+    }
+    return undefined;
+  }
+
+  async createAdminUser(insertAdmin: InsertAdminUser): Promise<AdminUser> {
+    console.log("Fallback: Admin user already exists");
+    return this.adminUser;
+  }
+
+  async updateAdminLastLogin(id: string): Promise<void> {
+    console.log("Fallback: Last login updated");
+  }
+
+  async createAdminSession(sessionData: { adminId: string; sessionToken: string; expiresAt: Date }): Promise<AdminSession> {
+    const session = {
+      id: "session-" + Date.now(),
+      ...sessionData,
+      createdAt: new Date()
+    };
+    this.sessions.set(sessionData.sessionToken, session);
+    return session;
+  }
+
+  async getAdminSession(sessionToken: string): Promise<AdminSession | undefined> {
+    return this.sessions.get(sessionToken);
+  }
+
+  async deleteAdminSession(sessionToken: string): Promise<void> {
+    this.sessions.delete(sessionToken);
+  }
+
+  // All other methods return empty/default data
+  async getUser(id: string): Promise<User | undefined> { return undefined; }
+  async getUserByPlatformId(platformId: string, platformType: "telegram" | "instagram"): Promise<User | undefined> { return undefined; }
+  async createUser(user: InsertUser): Promise<User> {
+    return {
+      id: "user-1",
+      platformId: user.platformId,
+      platformType: user.platformType,
+      fullName: user.fullName || null,
+      phoneNumber: user.phoneNumber || null,
+      languageCode: user.languageCode || null,
+      createdAt: new Date()
+    };
+  }
+  async updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined> { return undefined; }
+  async getAllUsers(): Promise<User[]> { return []; }
+  async getProduct(id: string): Promise<Product | undefined> { return undefined; }
+  async getAllProducts(): Promise<Product[]> { return []; }
+  async searchProducts(query: string, language: "uz" | "ru"): Promise<Product[]> { return []; }
+  async createProduct(product: InsertProduct): Promise<Product> {
+    return {
+      id: "product-1",
+      nameUz: product.nameUz,
+      nameRu: product.nameRu,
+      descriptionUz: product.descriptionUz || null,
+      descriptionRu: product.descriptionRu || null,
+      price: product.price,
+      stockQuantity: product.stockQuantity || null,
+      imageUrl: product.imageUrl || null,
+      category: product.category || null,
+      isActive: product.isActive || null,
+      createdAt: new Date()
+    };
+  }
+  async updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product | undefined> { return undefined; }
+  async deleteProduct(id: string): Promise<boolean> { return false; }
+  async getOrder(id: string): Promise<Order | undefined> { return undefined; }
+  async getOrdersByUser(userId: string): Promise<Order[]> { return []; }
+  async getAllOrders(): Promise<Order[]> { return []; }
+  async createOrder(order: InsertOrder): Promise<Order> {
+    return {
+      id: "order-1",
+      userId: order.userId,
+      productId: order.productId,
+      quantity: order.quantity || null,
+      totalPrice: order.totalPrice || null,
+      orderStatus: order.orderStatus || null,
+      createdAt: new Date()
+    };
+  }
+  async updateOrderStatus(id: string, status: "pending" | "processing" | "completed" | "cancelled"): Promise<Order | undefined> { return undefined; }
+  async getConversation(userId: string, platformType: "telegram" | "instagram"): Promise<Conversation | undefined> { return undefined; }
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    return {
+      id: "conv-1",
+      userId: conversation.userId,
+      platformType: conversation.platformType,
+      messages: conversation.messages || [],
+      isActive: conversation.isActive || null,
+      lastMessageAt: new Date(),
+      createdAt: new Date()
+    };
+  }
+  async updateConversationMessages(id: string, messages: any[]): Promise<Conversation | undefined> { return undefined; }
+  async getBotSettings(): Promise<BotSettings | undefined> { return undefined; }
+  async updateBotSettings(settings: Partial<InsertBotSettings>): Promise<BotSettings> {
+    return {
+      id: "settings-1",
+      telegramBotToken: settings.telegramBotToken || null,
+      instagramAccessToken: settings.instagramAccessToken || null,
+      geminiApiKey: settings.geminiApiKey || null,
+      isActive: true,
+      ruleBasedResponses: settings.ruleBasedResponses || {},
+      updatedAt: new Date()
+    };
+  }
+  async getDashboardStats(): Promise<{ totalUsers: number; activeOrders: number; totalRevenue: number; messagesCount: number; }> {
+    return { totalUsers: 0, activeOrders: 0, totalRevenue: 0, messagesCount: 0 };
+  }
+}
+
+// Try to use database storage, fallback if it fails
+function createStorage(): IStorage {
+  try {
+    // Check if we have a real database URL
+    if (process.env.DATABASE_URL?.includes("placeholder") || !process.env.DATABASE_URL?.startsWith("postgresql://")) {
+      console.log("📦 Using fallback storage (demo mode) - database not connected");
+      return new FallbackStorage();
+    }
+    console.log("📦 Using database storage");
+    return new DatabaseStorage();
+  } catch (error) {
+    console.log("📦 Database connection failed, using fallback storage (demo mode)");
+    return new FallbackStorage();
+  }
+}
+
+export const storage = createStorage();
