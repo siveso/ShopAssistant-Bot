@@ -8,7 +8,7 @@ The system is built to support multiple messaging platforms (Telegram and Instag
 
 **Bot Contact Information:**
 - Telegram Bot: @akramjon0011 (https://t.me/akramjon0011)
-- Admin Login: Akramjon001 / Hisobot201415
+- Admin Login: Configured securely (credentials removed from documentation for security)
 
 ## User Preferences
 

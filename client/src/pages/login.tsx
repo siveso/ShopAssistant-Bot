@@ -140,17 +140,13 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Login ma'lumotlar:</p>
-            <p>Username: <code className="bg-gray-100 px-2 py-1 rounded">Akramjon001</code></p>
-            <p>Parol: <code className="bg-gray-100 px-2 py-1 rounded">Hisobot201415</code></p>
-            
+          <div className="mt-6 text-center">
             <button 
               onClick={() => {
                 localStorage.clear();
                 window.location.reload();
               }}
-              className="mt-3 text-xs text-blue-600 underline hover:text-blue-800"
+              className="text-xs text-blue-600 underline hover:text-blue-800"
             >
               Browser ma'lumotlarini tozalash (agar muammo bo'lsa)
             </button>
