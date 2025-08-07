@@ -115,7 +115,7 @@ class TelegramBotService {
             reply_markup: mainMenu
           });
         }
-        else if (query.data === 'catalog') {
+        else if (query.data === 'catalog' || query.data === 'show_catalog') {
           await this.handleCatalogRequest(chatId, language);
         }
         else if (query.data === 'cart') {
@@ -130,9 +130,6 @@ class TelegramBotService {
         else if (query.data.startsWith('order_')) {
           const productId = query.data.split('_')[1];
           await this.handleProductOrder(chatId, userId, productId, language);
-        }
-        else if (query.data === 'show_catalog') {
-          await this.handleCatalogRequest(chatId, language);
         }
         else if (query.data === 'contact_operator') {
           await this.handleOperatorRequest(chatId, language);
