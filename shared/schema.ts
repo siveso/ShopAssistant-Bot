@@ -31,11 +31,17 @@ export const orders = pgTable("orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
   productId: varchar("product_id").references(() => products.id).notNull(),
-  quantity: integer("quantity").default(1),
-  totalPrice: decimal("total_price", { precision: 10, scale: 2 }),
+  productName: text("product_name").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   orderStatus: varchar("order_status", { 
     enum: ["pending", "processing", "completed", "cancelled"] 
   }).default("pending"),
+  customerName: text("customer_name").default(""),
+  customerPhone: text("customer_phone").default(""),
+  customerAddress: text("customer_address").default(""),
+  paymentMethod: text("payment_method").default(""),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

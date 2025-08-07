@@ -131,9 +131,23 @@ class TelegramBotService {
           const productId = query.data.split('_')[1];
           await this.handleProductDetails(chatId, productId, language);
         }
+        else if (query.data.startsWith('add_to_cart_')) {
+          const productId = query.data.split('_')[3]; // add_to_cart_id
+          await this.handleAddToCart(chatId, userId, productId, language);
+        }
+        else if (query.data.startsWith('quantity_')) {
+          const [, productId, quantity] = query.data.split('_');
+          await this.handleQuantitySelection(chatId, userId, productId, parseInt(quantity), language);
+        }
         else if (query.data.startsWith('order_')) {
           const productId = query.data.split('_')[1];
           await this.handleProductOrder(chatId, userId, productId, language);
+        }
+        else if (query.data === 'checkout') {
+          await this.handleCheckout(chatId, userId, language);
+        }
+        else if (query.data === 'continue_shopping') {
+          await this.handleCatalogRequest(chatId, language);
         }
         else if (query.data === 'contact_operator') {
           await this.handleOperatorRequest(chatId, language);
@@ -189,6 +203,13 @@ class TelegramBotService {
   private async processUserMessage(chatId: number, userId: string, message: string) {
     if (!this.bot) return;
 
+    // Check if user is providing checkout information
+    const userState = this.userStates.get(userId);
+    if (userState?.awaitingCheckoutInfo) {
+      await this.handleCheckoutInfo(chatId, userId, message);
+      return;
+    }
+
     // Get user info
     const user = await storage.getUserByPlatformId(userId, "telegram");
     if (!user) return;
@@ -213,6 +234,68 @@ class TelegramBotService {
     } else {
       // Use AI for general responses
       await this.handleGeneralQuery(chatId, userId, message, language);
+    }
+  }
+
+  private async handleCheckoutInfo(chatId: number, userId: string, message: string) {
+    if (!this.bot) return;
+
+    try {
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) return;
+
+      const language = user.languageCode || "uz";
+      const lines = message.trim().split('\n');
+
+      if (lines.length < 4) {
+        const errorMessage = language === "uz"
+          ? "❌ Ma'lumotlar to'liq emas. Iltimos, quyidagi tartibda yuboring:\n\n1️⃣ Ismingiz\n2️⃣ Telefon raqamingiz\n3️⃣ Manzil\n4️⃣ To'lov usuli"
+          : "❌ Данные неполные. Пожалуйста, отправьте в следующем порядке:\n\n1️⃣ Ваше имя\n2️⃣ Номер телефона\n3️⃣ Адрес\n4️⃣ Способ оплаты";
+        
+        await this.bot.sendMessage(chatId, errorMessage);
+        return;
+      }
+
+      const [customerName, customerPhone, customerAddress, paymentMethod] = lines;
+
+      // Update all pending orders with customer info
+      const orders = await storage.getOrdersByUser(user.id);
+      const pendingOrders = orders.filter(order => order.orderStatus === "pending");
+      
+      let totalAmount = 0;
+      for (const order of pendingOrders) {
+        totalAmount += parseFloat(order.totalPrice || "0");
+        // Update order with customer info and change status to processing
+        await storage.updateOrder(order.id, {
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(), 
+          customerAddress: customerAddress.trim(),
+          paymentMethod: paymentMethod.trim(),
+          orderStatus: "processing"
+        });
+      }
+
+      const confirmMessage = language === "uz"
+        ? `✅ Buyurtmangiz qabul qilindi!\n\n👤 ${customerName}\n📞 ${customerPhone}\n📍 ${customerAddress}\n💳 ${paymentMethod}\n\n📊 Jami: $${totalAmount.toFixed(2)}\n📦 Mahsulotlar soni: ${pendingOrders.length}\n\n🚚 Tez orada siz bilan bog'lanamiz!`
+        : `✅ Ваш заказ принят!\n\n👤 ${customerName}\n📞 ${customerPhone}\n📍 ${customerAddress}\n💳 ${paymentMethod}\n\n📊 Итого: $${totalAmount.toFixed(2)}\n📦 Количество товаров: ${pendingOrders.length}\n\n🚚 Скоро с вами свяжемся!`;
+
+      await this.bot.sendMessage(chatId, confirmMessage);
+
+      // Clear user state
+      this.userStates.delete(userId);
+
+      // Send main menu
+      const menuMessage = language === "uz" ? "🏠 Asosiy menyu:" : "🏠 Главное меню:";
+      await this.bot.sendMessage(chatId, menuMessage, {
+        reply_markup: this.getMainMenuKeyboard(language)
+      });
+    } catch (error) {
+      console.error("Error handling checkout info:", error);
+      const errorMessage = user?.languageCode === "uz"
+        ? "Buyurtmani rasmiylashtirish jarayonida xatolik yuz berdi."
+        : "Ошибка при оформлении заказа.";
+      
+      await this.bot.sendMessage(chatId, errorMessage);
     }
   }
 
@@ -414,6 +497,10 @@ class TelegramBotService {
         const keyboard = {
           inline_keyboard: [
             [{ 
+              text: language === "uz" ? "🛒 Savatga qo'shish" : "🛒 Добавить в корзину", 
+              callback_data: `add_to_cart_${product.id}` 
+            }],
+            [{ 
               text: language === "uz" ? "📋 Batafsil" : "📋 Подробнее", 
               callback_data: `product_${product.id}` 
             }]
@@ -469,8 +556,8 @@ class TelegramBotService {
       const keyboard = {
         inline_keyboard: [
           [{ 
-            text: language === "uz" ? "🛒 Buyurtma berish" : "🛒 Заказать", 
-            callback_data: `order_${product.id}` 
+            text: language === "uz" ? "🛒 Savatga qo'shish" : "🛒 Добавить в корзину", 
+            callback_data: `add_to_cart_${product.id}` 
           }],
           [{ 
             text: language === "uz" ? "⬅️ Katalogga qaytish" : "⬅️ Вернуться в каталог", 
@@ -502,11 +589,156 @@ class TelegramBotService {
     }
   }
 
+  private async handleAddToCart(chatId: number, userId: string, productId: string, language: "uz" | "ru") {
+    if (!this.bot) return;
+
+    try {
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        const message = language === "uz" ? "Mahsulot topilmadi." : "Товар не найден.";
+        await this.bot.sendMessage(chatId, message);
+        return;
+      }
+
+      const name = language === "uz" ? product.nameUz : product.nameRu;
+      const message = language === "uz" 
+        ? `📦 ${name}\n💰 Narxi: $${product.price}\n\nNechta dona kerak?`
+        : `📦 ${name}\n💰 Цена: $${product.price}\n\nСколько штук нужно?`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: "1", callback_data: `quantity_${productId}_1` },
+            { text: "2", callback_data: `quantity_${productId}_2` },
+            { text: "3", callback_data: `quantity_${productId}_3` }
+          ],
+          [
+            { text: "4", callback_data: `quantity_${productId}_4` },
+            { text: "5", callback_data: `quantity_${productId}_5` },
+            { text: "10", callback_data: `quantity_${productId}_10` }
+          ],
+          [{ 
+            text: language === "uz" ? "⬅️ Orqaga" : "⬅️ Назад", 
+            callback_data: "catalog" 
+          }]
+        ]
+      };
+
+      await this.bot.sendMessage(chatId, message, { reply_markup: keyboard });
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      const errorMessage = language === "uz"
+        ? "Savatga qo'shishda xatolik yuz berdi."
+        : "Ошибка при добавлении в корзину.";
+      
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
+  private async handleQuantitySelection(chatId: number, userId: string, productId: string, quantity: number, language: "uz" | "ru") {
+    if (!this.bot) return;
+
+    try {
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) return;
+
+      const product = await storage.getProduct(productId);
+      if (!product) {
+        const message = language === "uz" ? "Mahsulot topilmadi." : "Товар не найден.";
+        await this.bot.sendMessage(chatId, message);
+        return;
+      }
+
+      // Create order (cart item)
+      const totalPrice = parseFloat(product.price) * quantity;
+      const name = language === "uz" ? product.nameUz : product.nameRu;
+
+      await storage.createOrder({
+        userId: user.id,
+        productId: product.id,
+        productName: name,
+        quantity: quantity,
+        unitPrice: product.price,
+        totalPrice: totalPrice.toString(),
+        orderStatus: "pending",
+        customerName: "",
+        customerPhone: "",
+        customerAddress: "",
+        paymentMethod: ""
+      });
+
+      const message = language === "uz" 
+        ? `✅ Savatga qo'shildi!\n📦 ${name}\n🔢 Miqdor: ${quantity} dona\n💰 Jami: $${totalPrice.toFixed(2)}`
+        : `✅ Добавлено в корзину!\n📦 ${name}\n🔢 Количество: ${quantity} шт\n💰 Итого: $${totalPrice.toFixed(2)}`;
+
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { 
+              text: language === "uz" ? "🛒 Savatni ko'rish" : "🛒 Посмотреть корзину", 
+              callback_data: "cart" 
+            },
+            { 
+              text: language === "uz" ? "🛍️ Xaridni davom etish" : "🛍️ Продолжить покупки", 
+              callback_data: "continue_shopping" 
+            }
+          ]
+        ]
+      };
+
+      await this.bot.sendMessage(chatId, message, { reply_markup: keyboard });
+    } catch (error) {
+      console.error("Error selecting quantity:", error);
+      const errorMessage = language === "uz"
+        ? "Miqdorni tanlashda xatolik yuz berdi."
+        : "Ошибка при выборе количества.";
+      
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
+  private async handleCheckout(chatId: number, userId: string, language: "uz" | "ru") {
+    if (!this.bot) return;
+
+    try {
+      const user = await storage.getUserByPlatformId(userId, "telegram");
+      if (!user) return;
+
+      const orders = await storage.getOrdersByUser(user.id);
+      const pendingOrders = orders.filter(order => order.orderStatus === "pending");
+      
+      if (pendingOrders.length === 0) {
+        const message = language === "uz" 
+          ? "🛒 Savatingiz bo'sh."
+          : "🛒 Ваша корзина пуста.";
+        await this.bot.sendMessage(chatId, message);
+        return;
+      }
+
+      const message = language === "uz" 
+        ? "👤 Buyurtmani rasmiylashtirish uchun ma'lumotlaringizni yuboring:\n\n1️⃣ Ismingiz\n2️⃣ Telefon raqamingiz\n3️⃣ Manzil\n4️⃣ To'lov usuli (naqd/plastik karta)\n\nMisol:\nAli Valiyev\n+998901234567\nToshkent sh, Yunusobod t-ni\nNaqd pul"
+        : "👤 Для оформления заказа отправьте свои данные:\n\n1️⃣ Ваше имя\n2️⃣ Номер телефона\n3️⃣ Адрес\n4️⃣ Способ оплаты (наличные/карта)\n\nПример:\nАли Валиев\n+998901234567\nТашкент, Юнусабад\nНаличные";
+
+      await this.bot.sendMessage(chatId, message);
+
+      // Store user state for next message
+      this.userStates.set(userId, { awaitingCheckoutInfo: true });
+    } catch (error) {
+      console.error("Error in checkout:", error);
+      const errorMessage = language === "uz"
+        ? "Buyurtmani rasmiylashtirish jarayonida xatolik yuz berdi."
+        : "Ошибка при оформлении заказа.";
+      
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
+  }
+
+  private userStates = new Map<string, any>();
+
   private async handleCartRequest(chatId: number, userId: string, language: "uz" | "ru") {
     if (!this.bot) return;
 
     try {
-      // Get user from database first
       const user = await storage.getUserByPlatformId(userId, "telegram");
       if (!user) return;
 
@@ -530,40 +762,46 @@ class TelegramBotService {
         return;
       }
 
-      const cartMessage = language === "uz" 
-        ? `🛒 Savatingizda ${pendingOrders.length} ta mahsulot:`
-        : `🛒 В корзине ${pendingOrders.length} товаров:`;
-      
-      await this.bot.sendMessage(chatId, cartMessage);
-      
+      // Show cart contents
       let totalAmount = 0;
+      const cartMessage = language === "uz" ? "🛒 Sizning savatingiz:" : "🛒 Ваша корзина:";
+      await this.bot.sendMessage(chatId, cartMessage);
+
       for (const order of pendingOrders) {
-        const product = await storage.getProduct(order.productId);
-        if (product) {
-          const name = language === "uz" ? product.nameUz : product.nameRu;
-          const orderMessage = language === "uz"
-            ? `📦 ${name}\n💰 ${order.quantity} x $${product.price} = $${order.totalPrice}`
-            : `📦 ${name}\n💰 ${order.quantity} x $${product.price} = $${order.totalPrice}`;
-          
-          await this.bot.sendMessage(chatId, orderMessage);
-          totalAmount += parseFloat(order.totalPrice || "0");
-        }
+        const orderTotalPrice = parseFloat(order.totalPrice || "0");
+        totalAmount += orderTotalPrice;
+        
+        const itemMessage = language === "uz"
+          ? `📦 ${order.productName}\n🔢 Miqdor: ${order.quantity} dona\n💰 Narxi: $${order.unitPrice} × ${order.quantity} = $${orderTotalPrice.toFixed(2)}`
+          : `📦 ${order.productName}\n🔢 Количество: ${order.quantity} шт\n💰 Цена: $${order.unitPrice} × ${order.quantity} = $${orderTotalPrice.toFixed(2)}`;
+
+        await this.bot.sendMessage(chatId, itemMessage);
       }
-      
-      const totalMessage = language === "uz"
-        ? `💰 Umumiy summa: $${totalAmount.toFixed(2)}`
-        : `💰 Общая сумма: $${totalAmount.toFixed(2)}`;
-      
+
+      const summaryMessage = language === "uz"
+        ? `📊 Jami: $${totalAmount.toFixed(2)}\n📦 Mahsulotlar soni: ${pendingOrders.length}`
+        : `📊 Итого: $${totalAmount.toFixed(2)}\n📦 Количество товаров: ${pendingOrders.length}`;
+
       const keyboard = {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: language === "uz" ? "✅ Buyurtmani tasdiqlash" : "✅ Подтвердить заказ", callback_data: "confirm_order" }],
-            [{ text: language === "uz" ? "🗑️ Savatni tozalash" : "🗑️ Очистить корзину", callback_data: "clear_cart" }]
+        inline_keyboard: [
+          [{ 
+            text: language === "uz" ? "✅ Buyurtmani rasmiylashtirish" : "✅ Оформить заказ", 
+            callback_data: "checkout" 
+          }],
+          [
+            { 
+              text: language === "uz" ? "🛍️ Xaridni davom etish" : "🛍️ Продолжить покупки", 
+              callback_data: "continue_shopping" 
+            },
+            { 
+              text: language === "uz" ? "🗑️ Savatni tozalash" : "🗑️ Очистить корзину", 
+              callback_data: "clear_cart" 
+            }
           ]
-        }
+        ]
       };
-      
-      await this.bot.sendMessage(chatId, totalMessage, keyboard);
+
+      await this.bot.sendMessage(chatId, summaryMessage, { reply_markup: keyboard });
     } catch (error) {
       console.error("Error handling cart request:", error);
     }
